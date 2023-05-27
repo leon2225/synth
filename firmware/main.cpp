@@ -15,9 +15,8 @@
 #include "stdfix.h"
 #include "math.h"
 
-
 #include "DAC.h"
-
+#include "ToneSheduler.h"
 
 // Defines
 extern const uint DEBUG1_PIN = 11;
@@ -28,10 +27,9 @@ const uint AUDIO_LRCLK = 28;
 const uint AUDIO_BCLK = 27;
 const uint AUDIO_DOUT = 3;
 
-const uint32_t SAMPLE_RATE = 48000;
-
 // Global variables
 DAC *dac;
+
 static char strBuffer[100];
 
 // Peripheral variables
@@ -46,55 +44,33 @@ void setup();
 int main()
 {
     setup();
-    uint32_t attack = INT32_MAX/(48000*0.1);
-    uint32_t sustain = INT32_MAX * 0.1;
-    uint32_t decay = (INT32_MAX-sustain)/(48000*0.2);
-    uint32_t release = sustain/(48000*0.3);
-    uint32_t duration = SAMPLE_RATE * 0.3;
+
+    ToneSheduler toneDispatcher;
+
+    AdsrProfile defaultProfile = AdsrProfile(0.1, 0.2, 0.1, 0.3);
+    uint32_t tone1 = toneDispatcher.addTone(440, 0, 1000, defaultProfile);
+
+    float duration = 0.3;
 
 
     //frequency creation
     float pitches[] = {64,65,66,67,68,69,70,71};
-    uint32_t frequencies[sizeof(pitches)/sizeof(pitches[0])];
+    const uint32_t PITCH_NUMBER = sizeof(pitches)/sizeof(pitches[0]);
+    uint32_t times[PITCH_NUMBER] = {0, 1, 2, 3, 4, 5, 6, 7};
+    uint32_t frequencies[PITCH_NUMBER];
 
-    for (int i = 0; i < sizeof(pitches)/sizeof(pitches[0]); i++)
+    for (int i = 0; i < PITCH_NUMBER; i++)
     {
         frequencies[i] = powf( 2, (pitches[i] - 69) / 12) * 440;
+
+        toneDispatcher.addTone(frequencies[i], times[i], duration, defaultProfile);
     }
-    uint32_t oldChannel = 0;
-    uint32_t currentChannel = 0;
 
-    uint32_t startTime = 0;
-    uint32_t endTime = 0;
     
-    uint32_t toneDistance = 1000 * 150;
-
-    uint32_t frequency = 0;
-    uint32_t frequencyIndex = 0;
-    int32_t frequencyDir = 1;
 
     while (1)
     {
-        dac->cyclicHandler();
-        
-        if (time_us_32() - startTime > toneDistance)
-        {
-            startTime = time_us_32();
-
-
-            frequency = frequencies[frequencyIndex];
-            frequencyIndex += frequencyDir;
-            if (frequencyIndex == (sizeof(pitches)/sizeof(pitches[0]) - 1) || frequencyIndex == 0)
-            {
-                frequencyDir *= -1;
-            }
-            sprintf(strBuffer, ">f: %d\n", frequency);
-            uart_puts(uart0, strBuffer);
-
-            oldChannel = currentChannel;
-            currentChannel = dac->setTone(frequency, duration, attack, decay, sustain, release);
-        }
-        
+        toneDispatcher.cyclicHandler();
     }
     
     return 0;
@@ -106,7 +82,7 @@ void setup()
 
     // ** I²S initialisation **
     dac = &DAC::getInstance();
-    dac->setup(AUDIO_LRCLK, AUDIO_BCLK, AUDIO_DOUT);
+    dac->setup(AUDIO_LRCLK, AUDIO_BCLK, AUDIO_DOUT, SAMPLE_RATE);
 
     // ** GPIO initialisation **
     // We will make this GPIO an input, and pull it up by default

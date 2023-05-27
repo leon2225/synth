@@ -30,64 +30,10 @@ static char strBuffer[100];
 volatile uint32_t outputBuffer[OUTPUT_BUFFER_SIZE] = {0};
 
 void dma_handler();
-inline int32_t sadd(int32_t a, int32_t b);
 
 
-//***************************************************************************************
-//* Starts a new Tone
-//*
-//* returns the channel number of the new tone, or -1 if no channel is available
-//***************************************************************************************
-int DAC::setTone(float frequency, uint32_t duration, uint32_t attack, uint32_t decay, uint32_t sustain, uint32_t release)
+void DAC::setup(uint32_t lrclkPin, uint32_t bclkPin, uint32_t doutPin, uint32_t sampleRate)
 {
-    //find a free channel
-    for (int i = 0; i < CHANNEL_NUMBER; i++)
-    {
-        if (currentTones[i].isDone())
-        {
-            currentTones[i] = Tone(frequency, duration, attack, decay, sustain, release);
-
-            // if this is the highest active channel, update the highest active channel
-            if (i > highestActiveChannel)
-            {
-                highestActiveChannel = i;
-            }
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-void DAC::release(uint8_t channel)
-{
-    currentTones[channel].stop();
-}
-
-bool DAC::isDone(uint8_t channel)
-{
-    bool done = currentTones[channel].isDone();
-    
-    if (done && channel == highestActiveChannel)
-    {
-        // find the new highest active channel
-        for (int i = highestActiveChannel - 1; i >= 0; i--)
-        {
-            if (!currentTones[i].isDone())
-            {
-                highestActiveChannel = i;
-                break;
-            }
-        }
-    }
-
-    return currentTones[channel].isDone();
-}
-
-void DAC::setup(uint lrclkPin, uint bclkPin, uint doutPin)
-{
-    Tone::setupSine();
-
     // Set up the GPIO pins
     this->lrclkPin = lrclkPin;
     this->bclkPin = bclkPin;
@@ -97,7 +43,7 @@ void DAC::setup(uint lrclkPin, uint bclkPin, uint doutPin)
     pio = pio0;
     sm = pio_claim_unused_sm(pio, true);
     offset = pio_add_program(pio, &i2s_program);
-    i2s_program_init(pio, sm, offset, lrclkPin, bclkPin, doutPin, 48000);
+    i2s_program_init(pio, sm, offset, lrclkPin, bclkPin, doutPin, sampleRate);
 
     pio_sm_set_enabled(pio, sm, true);
 
@@ -175,49 +121,26 @@ void DAC::interruptHandler()
 
 }
 
-void DAC::cyclicHandler()
+bool DAC::cyclicHandler(volatile uint32_t** buffer, uint32_t *bufferLength)
 {
     if (bufferToFill == 0)
     {
-        return;
+        return 0;
     }
 
-    gpio_put(DEBUG2_PIN, 1);
+    const size_t start = bufferToFill == 1 ? 0 : (OUTPUT_BUFFER_SIZE >> 1);
+    const size_t end = start + (OUTPUT_BUFFER_SIZE >> 1);
 
-    const size_t start = bufferToFill == 1 ? 0 : OUTPUT_BUFFER_SIZE / 2;
-    const size_t end = bufferToFill == 1 ? OUTPUT_BUFFER_SIZE / 2 : OUTPUT_BUFFER_SIZE;
+    *buffer = &outputBuffer[start];
+    *bufferLength = OUTPUT_BUFFER_SIZE >> 1;
 
-    uint32_t sample = 0;
-
-    // Fill the buffer
-    for (size_t i = start; i < end; i+=2)
-    {
-        sample = 0;
-        for (size_t channel = 0; channel <= highestActiveChannel; channel++)
-        {
-            sample = sadd(sample, currentTones[channel].nextSample());
-        }
-
-        outputBuffer[i] = sample;
-        outputBuffer[i+1] = sample;
-    }
-    gpio_put(DEBUG2_PIN, 0);
 
     bufferToFill = 0;
+    return true;
 }
 
 void dma_handler()
 {
     DAC *dac = &DAC::getInstance();
     dac->interruptHandler();
-}
-
-inline int32_t sadd(int32_t a, int32_t b)
-{
-    int32_t result;
-    if(__builtin_add_overflow(a, b, &result))
-    {
-        result = a > 0 ? INT32_MAX : INT32_MIN;
-    }
-    return result;
 }

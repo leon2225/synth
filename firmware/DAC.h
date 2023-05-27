@@ -1,9 +1,9 @@
+#pragma once
+
 #include "pico/stdlib.h"
 #include <stdio.h>
 #include "hardware/pio.h"
 #include "Tone.h"
-
-#define CHANNEL_NUMBER 10
 
 class DAC {
     public:
@@ -13,29 +13,22 @@ class DAC {
             return theOneToRuleThemAll;
         }
         
-        int setTone(float frequency, uint32_t duration, uint32_t attack, uint32_t decay, uint32_t sustain, uint32_t release);
-        void release(uint8_t channel);
-        bool isDone(uint8_t channel);
         void interruptHandler();
-        void cyclicHandler();
-        void setup(uint lrclkPin, uint bclkPin, uint doutPin);
+        bool cyclicHandler(volatile uint32_t** buffer, uint32_t *bufferLength);
+        void setup(uint32_t lrclkPin, uint32_t bclkPin, uint32_t doutPin, uint32_t sampleRate);
     private:
         DAC() {}
 
-        uint lrclkPin;
-        uint bclkPin;
-        uint doutPin;
+        uint32_t lrclkPin;
+        uint32_t bclkPin;
+        uint32_t doutPin;
         
         PIO pio;
-        uint sm; 
-        uint offset;
+        uint32_t sm; 
+        uint32_t offset;
 
-        Tone currentTones[CHANNEL_NUMBER];
-
-        uint dmaChannels[2] = {0};
+        uint32_t dmaChannels[2] = {0};
         uint8_t bufferToFill = 0; // 1 for first half, 2 for second half, 0 for none
-
-        int8_t highestActiveChannel = 0;
 
         void DMASetup();
         int32_t getChannelThatFired();

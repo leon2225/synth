@@ -25,7 +25,7 @@ pico_sdk_init()
 
 
 # Add executable. Default name is the project name, version 0.1
-set(SOURCE_FILES main.cpp DAC.cpp Tone.cpp ToneDispatcher.cpp)
+set(SOURCE_FILES main.cpp DAC.cpp Tone.cpp ToneSheduler.cpp)
 add_executable(Synth ${SOURCE_FILES} )
 
 pico_set_program_name(Synth "Synth")
