@@ -1,0 +1,46 @@
+.program i2s
+.side_set 2
+
+.wrap_target
+                    ;        /--- LRCLK
+                    ;        |/-- BCLK
+bitloop1:           ;        ||
+    out pins, 1       side 0b10
+    jmp x-- bitloop1  side 0b11
+    out pins, 1       side 0b00
+    set x, 30         side 0b01
+
+bitloop0:
+    out pins, 1       side 0b00
+    jmp x-- bitloop0  side 0b01
+    out pins, 1       side 0b10
+public entry_point:
+    set x, 30         side 0b11
+.wrap
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+static inline void i2s_program_init(PIO pio, uint sm, uint offset, uint lrclkPin, uint bclkPin, uint doutPin, float sampleRate) {
+
+    pio_gpio_init(pio, lrclkPin);
+    pio_gpio_init(pio, bclkPin);
+    pio_gpio_init(pio, doutPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, lrclkPin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, bclkPin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, doutPin, 1, true);
+
+    pio_sm_config c = i2s_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, bclkPin);
+    sm_config_set_out_pins(&c, doutPin, 1);
+    sm_config_set_out_shift(&c, false, true, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    int cycles_per_sample = 32*2*2;
+    float div = clock_get_hz(clk_sys) / (sampleRate * cycles_per_sample);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_exec(pio, sm, pio_encode_jmp(offset + i2s_offset_entry_point));
+}
+%}
