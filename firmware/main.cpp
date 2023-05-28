@@ -46,36 +46,41 @@ int main()
 {
     setup();
 
-    ToneSheduler toneDispatcher;
+    ToneSheduler toneSheduler;
 
     AdsrProfile defaultProfile = AdsrProfile(0.1, 0.2, 0.1, 0.3);
-    uint32_t tone1 = toneDispatcher.addTone(440, 0, 1000, defaultProfile);
 
     float duration = 0.3;
 
 
     //frequency creation
-    float pitches[] = {64,65,66,67,68,69,70,71};
+    float pitches[] = {67.0,55.0,43.0,67.0,55.0,43.0,67.0,55.0,43.0,63.0,51.0,39.0,65.0,53.0,41.0,65.0,53.0,41.0,65.0,53.0,41.0,62.0,50.0,38.0};
     const uint32_t PITCH_NUMBER = sizeof(pitches)/sizeof(pitches[0]);
-    uint32_t times[PITCH_NUMBER] = {0, 1, 2, 3, 4, 5, 6, 7};
+    float times[PITCH_NUMBER] = {0.25,0.25,0.25,0.5,0.5,0.5,0.75,0.75,0.75,1.0,1.0,1.0,2.25,2.25,2.25,2.5,2.5,2.5,2.75,2.75,2.75,3.0,3.0,3.0};
+    float durations[PITCH_NUMBER] = {0.23,0.23,0.23,0.23,0.23,0.23,0.23,0.23,0.23,0.97,0.97,0.97,0.23,0.23,0.23,0.23,0.23,0.23,0.23,0.23,0.23,1.97,1.97,1.97};
     uint32_t frequencies[PITCH_NUMBER];
 
-            //toggle debug2 pin
-            gpio_xor_mask(1u << DEBUG2_PIN);
-    for (int i = 0; i < PITCH_NUMBER; i++)
-    {
-        frequencies[i] = powf( 2, (pitches[i] - 69) / 12) * 440;
-
-        toneDispatcher.addTone(frequencies[i], times[i], duration, defaultProfile);
-    }
-            //toggle debug2 pin
-            gpio_xor_mask(1u << DEBUG2_PIN);
+    
 
     
 
     while (1)
     {
-        toneDispatcher.cyclicHandler();
+        if(!toneSheduler.busy())
+        {
+            //toggle debug2 pin
+            gpio_xor_mask(1u << DEBUG2_PIN);
+            for (int i = 0; i < PITCH_NUMBER; i++)
+            {
+                frequencies[i] = powf( 2, (pitches[i] - 69) / 12) * 440;
+
+                toneSheduler.addToneRel(frequencies[i], times[i], duration, defaultProfile);
+            }
+            //toggle debug2 pin
+            gpio_xor_mask(1u << DEBUG2_PIN);
+        }
+
+        toneSheduler.cyclicHandler();
     }
     
     return 0;

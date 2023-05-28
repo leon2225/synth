@@ -26,31 +26,87 @@ ToneSheduler::ToneSheduler()
     dac = &DAC::getInstance();
 }
 
+int ToneSheduler::addToneRel(float frequency, float relStartTime_sec, float duration, AdsrProfile adsrProfile)
+{
+    uint32_t startTime_sam = relStartTime_sec * SAMPLE_RATE;
+    return addToneRaw(frequency, startTime_sam + currentTime, duration, adsrProfile);
+}
+
+int ToneSheduler::addToneAbs(float frequency, float startTime_sec, float duration, AdsrProfile adsrProfile)
+{
+    uint32_t startTime_sam = startTime_sec * SAMPLE_RATE;
+    return addToneRaw(frequency, startTime_sam, duration, adsrProfile);
+}
+
 //***************************************************************************************
 //* Adds a new tone to the dispatcher
 //*
-//* returns the channel number of the new tone, or -1 if no channel is available
+//* 
 //***************************************************************************************
-int ToneSheduler::addTone(float frequency, uint32_t startTime, float duration, AdsrProfile adsrProfile)
+int ToneSheduler::addToneRaw(float frequency, uint32_t startTime_sam, float duration, AdsrProfile adsrProfile)
+{
+
+    //parameter check
+    if (frequency < 0 || frequency > SAMPLE_RATE/2)
+    {
+        return -1;
+    }
+    if (!jobQueue.empty() && (startTime_sam < jobQueue.front().startTime))
+    {
+        return -2;
+    }
+    if (duration < 0)
+    {
+        return -3;
+    }
+
+    //add the tone to the queue
+
+    Tone tone = Tone(frequency, duration * SAMPLE_RATE, 
+        adsrProfile.attackRate, adsrProfile.decayRate, adsrProfile.sustainFactor, adsrProfile.releaseRate);
+
+    jobQueue.push(ToneJob(tone, startTime_sam));
+    return 0;
+}
+
+bool ToneSheduler::startTone(Tone tone)
 {
     //find a free channel
     for (int i = 0; i < CHANNEL_NUMBER; i++)
     {
         if (currentTones[i].isDone())
         {
-            currentTones[i] = Tone(frequency, duration * SAMPLE_RATE, 
-                adsrProfile.attackRate, adsrProfile.decayRate, adsrProfile.sustainFactor, adsrProfile.releaseRate);
+            //Channel is free, overwrite it
+            currentTones[i] = tone;
 
             // if this is the highest active channel, update the highest active channel
             if (i > highestActiveChannel)
             {
                 highestActiveChannel = i;
             }
-            return i;
+            return true;
         }
     }
 
-    return -1;
+    return false;
+}
+
+void ToneSheduler::handleDoneTone(uint8_t channel)
+{
+    // if this is the highest active channel, update the highest active channel
+    if (channel == highestActiveChannel)
+    {
+        // find the new highest active channel
+        for (int i = highestActiveChannel - 1; i >= 0; i--)
+        {
+            if (!currentTones[i].isDone())
+            {
+                highestActiveChannel = i;
+                return;
+            }
+        }
+        highestActiveChannel = -1;
+    }
 }
 
 void ToneSheduler::cyclicHandler()
@@ -62,47 +118,68 @@ void ToneSheduler::cyclicHandler()
 
     if (fillBuffer)
     {
+        gpio_xor_mask(1<<DEBUG3_PIN);
         fillBufferCallback(buffer, bufferLength);
+        gpio_xor_mask(1<<DEBUG3_PIN);
     }
 }
 
-#if 0
-bool ToneDispatcher::isDone(uint8_t channel)
+bool ToneSheduler::busy()
 {
-    bool done = currentTones[channel].isDone();
-    
-    if (done && channel == highestActiveChannel)
-    {
-        // find the new highest active channel
-        for (int i = highestActiveChannel - 1; i >= 0; i--)
-        {
-            if (!currentTones[i].isDone())
-            {
-                highestActiveChannel = i;
-                break;
-            }
-        }
-    }
-
-    return currentTones[channel].isDone();
+    return !jobQueue.empty() || highestActiveChannel != -1;
 }
-#endif
 
 void ToneSheduler::fillBufferCallback(volatile uint32_t* buffer, uint32_t bufferLength)
 {
     uint32_t sample = 0;
+    bool startSuccess = false;
 
+    // Check if any jobs from the queue has to be started for this buffer
+    // Therefor check if the first (earliest) job in the queue has to be started before the end of the buffer 
+    // (check for bufferlength/2 because of stereo buffering)
+    bool sheduleNewJob =(!jobQueue.empty() && jobQueue.front().startTime <= (currentTime + (bufferLength/2)));
+    uint32_t startTime = UINT32_MAX;
+    if (sheduleNewJob)
+    {
+        startTime = jobQueue.front().startTime;
+    }
+    
     // Fill the buffer
     for (size_t i = 0; i < bufferLength; i+=2)
     {
+        // Check if a new job has to be started
+        if (startTime <= currentTime)
+        {
+            startSuccess = startTone(jobQueue.front().tone);
+            if(startSuccess)
+            {
+                // if the job was started successfully, remove it from the queue
+                // and update the startTime for the next job
+                jobQueue.pop();
+                startTime = jobQueue.empty() ? UINT32_MAX : jobQueue.front().startTime;
+            }
+        }
+
+        // calculate the sample
         sample = 0;
-        for (size_t channel = 0; channel <= highestActiveChannel; channel++)
+        for (int channel = 0; channel <= highestActiveChannel; channel++)
         {
             sample = sadd(sample, currentTones[channel].nextSample());
         }
 
+        // update the current time and fill the stereo buffer
+        currentTime ++;
         buffer[i] = sample;
         buffer[i+1] = sample;
+    }
+
+    // clean up done tones
+    for (int channel = 0; channel <= highestActiveChannel; channel++)
+    {
+        if (currentTones[channel].isDone())
+        {
+            handleDoneTone(channel);
+        }
     }
 }
 
