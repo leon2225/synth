@@ -16,6 +16,9 @@ class Tone
         bool isDone();
         uint32_t nextSample(); // should be called at 48kHz
     private:
+        //debug
+        uint32_t oldState = 0;
+
         uint32_t stepSize;
         volatile uint32_t accumulator;
 

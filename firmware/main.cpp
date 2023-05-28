@@ -20,8 +20,8 @@
 
 // Defines
 extern const uint DEBUG1_PIN = 11;
-extern const uint DEBUG2_PIN = 15;
-extern const uint DEBUG3_PIN = 12;
+extern const uint DEBUG2_PIN = 12;
+extern const uint DEBUG3_PIN = 15;
 
 const uint AUDIO_LRCLK = 28;
 const uint AUDIO_BCLK = 27;
@@ -41,6 +41,7 @@ interp_config cfg;
 bool alarm_callback(struct repeating_timer *timer);
 void setup();
 
+
 int main()
 {
     setup();
@@ -59,12 +60,16 @@ int main()
     uint32_t times[PITCH_NUMBER] = {0, 1, 2, 3, 4, 5, 6, 7};
     uint32_t frequencies[PITCH_NUMBER];
 
+            //toggle debug2 pin
+            gpio_xor_mask(1u << DEBUG2_PIN);
     for (int i = 0; i < PITCH_NUMBER; i++)
     {
         frequencies[i] = powf( 2, (pitches[i] - 69) / 12) * 440;
 
         toneDispatcher.addTone(frequencies[i], times[i], duration, defaultProfile);
     }
+            //toggle debug2 pin
+            gpio_xor_mask(1u << DEBUG2_PIN);
 
     
 

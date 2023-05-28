@@ -112,8 +112,6 @@ void DAC::interruptHandler()
     uint32_t completedChannel = getChannelThatFired();
     dma_channel_set_read_addr(completedChannel, outputBuffer + (completedChannel == 1 ? OUTPUT_BUFFER_SIZE / 2 : 0), 0);
 
-    gpio_put(DEBUG3_PIN, dma_channel_is_busy(0));
-
     bufferToFill = completedChannel + 1;
 
     // Clear the interrupt request.

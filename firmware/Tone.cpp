@@ -91,9 +91,6 @@ uint32_t Tone::nextADSRVolume()
     uint32_t volume = this->ADSRVolume >> 23;
     cyclesLeft--;
 
-    //debug 
-    static uint32_t oldState;
-
     switch (this->ADSRState)
     {
     case ADSR_RISING:
