@@ -5,8 +5,8 @@
 #include <queue>
 #include "DAC.h"
 
-#define CHANNEL_NUMBER 10
-#define QUEUE_LENGTH 100
+#define CHANNEL_NUMBER 16
+#define QUEUE_LENGTH 128
 #define SAMPLE_RATE 48000
 
 struct AdsrProfile
@@ -46,6 +46,8 @@ class ToneSheduler {
         int addToneRel(float frequency, float startOffset_sec, float duration, AdsrProfile adsrProfile);
         void cyclicHandler();
         bool busy();
+        void stopAll();
+        uint32_t getPlaceLeftInQueue();
 
     private:
         void fillBufferCallback(volatile uint32_t* buffer, uint32_t bufferLength);
@@ -57,6 +59,7 @@ class ToneSheduler {
         int8_t highestActiveChannel = -1;
 
         std::queue<ToneJob> jobQueue;
+        uint32_t placeLeftInQueue = QUEUE_LENGTH;
 
         uint32_t currentTime = 0;
 

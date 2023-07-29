@@ -13,9 +13,13 @@
 #include "i2s.pio.h"
 #include "Tone.h"
 
+#define USE_DEBUG_PINS 0
+
 extern const uint DEBUG1_PIN;
 extern const uint DEBUG2_PIN;
 extern const uint DEBUG3_PIN;
+
+static char strBuffer[100];
 
 inline int32_t sadd(int32_t a, int32_t b);
 
@@ -60,11 +64,17 @@ int ToneSheduler::addToneRaw(float frequency, uint32_t startTime_sam, float dura
         return -3;
     }
 
-    //add the tone to the queue
+    //check if the queue is full
+    if (placeLeftInQueue == 0)
+    {
+        return -4;
+    }
 
+    //add the tone to the queue
     Tone tone = Tone(frequency, duration * SAMPLE_RATE, 
         adsrProfile.attackRate, adsrProfile.decayRate, adsrProfile.sustainFactor, adsrProfile.releaseRate);
 
+    placeLeftInQueue--;
     jobQueue.push(ToneJob(tone, startTime_sam));
     return 0;
 }
@@ -72,18 +82,23 @@ int ToneSheduler::addToneRaw(float frequency, uint32_t startTime_sam, float dura
 bool ToneSheduler::startTone(Tone tone)
 {
     //find a free channel
-    for (int i = 0; i < CHANNEL_NUMBER; i++)
+    for (int channelIndex = 0; channelIndex < CHANNEL_NUMBER; channelIndex++)
     {
-        if (currentTones[i].isDone())
+        if (currentTones[channelIndex].isDone())
         {
             //Channel is free, overwrite it
-            currentTones[i] = tone;
+            currentTones[channelIndex] = tone;
 
             // if this is the highest active channel, update the highest active channel
-            if (i > highestActiveChannel)
+            if (channelIndex > highestActiveChannel)
             {
-                highestActiveChannel = i;
+                highestActiveChannel = channelIndex;
+                sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
+                uart_puts(uart0, strBuffer);
             }
+
+
+
             return true;
         }
     }
@@ -102,10 +117,14 @@ void ToneSheduler::handleDoneTone(uint8_t channel)
             if (!currentTones[i].isDone())
             {
                 highestActiveChannel = i;
+                sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
+                uart_puts(uart0, strBuffer);
                 return;
             }
         }
         highestActiveChannel = -1;
+        sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
+        uart_puts(uart0, strBuffer);
     }
 }
 
@@ -118,9 +137,9 @@ void ToneSheduler::cyclicHandler()
 
     if (fillBuffer)
     {
-        gpio_xor_mask(1<<DEBUG3_PIN);
+        gpio_xor_mask(USE_DEBUG_PINS<<DEBUG3_PIN);
         fillBufferCallback(buffer, bufferLength);
-        gpio_xor_mask(1<<DEBUG3_PIN);
+        gpio_xor_mask(USE_DEBUG_PINS<<DEBUG3_PIN);
     }
 }
 
@@ -156,6 +175,7 @@ void ToneSheduler::fillBufferCallback(volatile uint32_t* buffer, uint32_t buffer
                 // if the job was started successfully, remove it from the queue
                 // and update the startTime for the next job
                 jobQueue.pop();
+                placeLeftInQueue++;
                 startTime = jobQueue.empty() ? UINT32_MAX : jobQueue.front().startTime;
             }
         }
@@ -181,6 +201,11 @@ void ToneSheduler::fillBufferCallback(volatile uint32_t* buffer, uint32_t buffer
             handleDoneTone(channel);
         }
     }
+}
+
+uint32_t ToneSheduler::getPlaceLeftInQueue()
+{
+    return placeLeftInQueue;
 }
 
 inline int32_t sadd(int32_t a, int32_t b)

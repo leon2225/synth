@@ -23,6 +23,7 @@
 extern const uint DEBUG1_PIN;
 extern const uint DEBUG2_PIN;
 extern const uint DEBUG3_PIN;
+extern const uint DEBUG4_PIN;
 
 #define OUTPUT_BUFFER_SIZE 2048
 

@@ -29,7 +29,7 @@ void Tone::setupSine()
     // Create a sine lookup table
     for (size_t i = 0; i < LUT_SIZE; i++)
     {
-        sineLUT[i] = (int)(INT24_MAX * sinf((float)i * 2 * M_PI / (float)LUT_SIZE) * 0.5f);
+        sineLUT[i] = (int)(INT24_MAX * sinf((float)i * 2 * M_PI / (float)LUT_SIZE) * 0.15f);
 
         //add harmonics
         const uint32_t NUM_HARMONICS = 5;
@@ -132,6 +132,7 @@ uint32_t Tone::nextADSRVolume()
         break;
     }
 
+#if 0
     //debug
     if (oldState != this->ADSRState)
     {
@@ -139,16 +140,13 @@ uint32_t Tone::nextADSRVolume()
         //toggle debug pin
         gpio_xor_mask(1<<DEBUG1_PIN);
         oldState = this->ADSRState;
-#if 0
         sprintf(strBuffer, ">V: %d\n", this->ADSRVolume);
         uart_puts(uart0, strBuffer);
 
         sprintf(strBuffer, ">S: %d\n", this->ADSRState);
         uart_puts(uart0, strBuffer);
-#endif
     }
-
-    //printf(">volume: %d\n", this->ADSRVolume);
+#endif
 
     return volume;
 }

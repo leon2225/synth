@@ -25,8 +25,11 @@ pico_sdk_init()
 
 
 # Add executable. Default name is the project name, version 0.1
-set(SOURCE_FILES main.cpp DAC.cpp Tone.cpp ToneSheduler.cpp)
-add_executable(Synth ${SOURCE_FILES} )
+FILE(GLOB SOURCE_FILES "*.cpp" "*.c" "*.h")
+#set(SOURCE_FILES main.cpp DAC.cpp Tone.cpp ToneSheduler.cpp core1main.cpp displayDriver.cpp )
+add_executable(Synth ${SOURCE_FILES})
+
+#add_subdirectory(ili9488)
 
 pico_set_program_name(Synth "Synth")
 pico_set_program_version(Synth "0.1")
@@ -56,6 +59,8 @@ target_link_libraries(Synth
         hardware_interp
         hardware_timer
         hardware_clocks
+        hardware_interp
+        pico_multicore
         )
 
 pico_add_extra_outputs(Synth)
