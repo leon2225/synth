@@ -859,6 +859,9 @@ ili9488_status_t ili9488_driver_fill_rectangle(const uint16_t page, const uint16
 		// Calculate size of pixels
 		pixel_size = (uint32_t) ( col_size * page_size );
 
+		// Wait until previous operation is finished
+		ili9488_if_wait_for_ready();
+
 		// Set cursor
 		status |= ili9488_driver_set_cursor( col, col + col_size - 1, page, page + page_size - 1);
 

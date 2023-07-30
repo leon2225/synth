@@ -54,6 +54,7 @@ uint pwm_chan;
 uint32_t g_dmaChannel = 0;
 uint32_t g_dmaSrc = 0;
 dma_channel_config g_dmaConfig;
+uint32_t g_constData = 0; //Used for non-incrementing DMA transfers
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -227,6 +228,7 @@ void ili9488_if_set_led(const float brigthness)
 ili9488_status_t ili9488_if_spi_transmit(const uint16_t * p_data, const uint32_t size, const bool incrementSrc, const bool blocking)
 {
 	ili9488_status_t status = eILI9488_OK;
+	g_constData = *p_data;
 
 	// USER CODE BEGIN...
 
@@ -236,10 +238,10 @@ ili9488_status_t ili9488_if_spi_transmit(const uint16_t * p_data, const uint32_t
 	// start DMA transfer
 	channel_config_set_read_increment(&g_dmaConfig, incrementSrc);
 	dma_channel_configure(g_dmaChannel, &g_dmaConfig,
-                          &spi_get_hw(eGPIO_SPI)->dr,	// write address
-                          p_data,           			// read address
-                          size, 						// element count
-                          true                   		// start immediately
+                          &spi_get_hw(eGPIO_SPI)->dr,		// write address
+                          incrementSrc?p_data:(const uint16_t*)&g_constData,	// read address
+                          size, 							// element count
+                          true                   			// start immediately
     );
 	
 	// wait if transfer is not finished for blocking mode
