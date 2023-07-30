@@ -39,17 +39,17 @@
  */
 typedef struct
 {
-	unsigned int R : 5;	/**<Red color */
+	unsigned int B : 5;	/**<Red color */
 	unsigned int G : 6;	/**<Green color */
-	unsigned int B : 5;	/**<Blue color */
-} ili9488_rgb_t;
+	unsigned int R : 5;	/**<Blue color */
+} ili9488_rgb565_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function Prototypes
 ////////////////////////////////////////////////////////////////////////////////
 ili9488_status_t 	ili9488_low_if_write_register		(const ili9488_cmd_t cmd, const uint8_t * const tx_data, const uint32_t size);
 ili9488_status_t 	ili9488_low_if_read_register		(const ili9488_cmd_t cmd, uint8_t * const rx_data, const uint32_t size);
-ili9488_status_t 	ili9488_low_if_write_rgb_to_gram 	(const ili9488_rgb_t * const p_rgb, const uint32_t size);
+ili9488_status_t 	ili9488_low_if_write_rgb_to_gram 	(const ili9488_rgb565_t * const p_rgb, const uint32_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

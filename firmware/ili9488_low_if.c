@@ -172,7 +172,7 @@ ili9488_status_t ili9488_low_if_read_register(const ili9488_cmd_t cmd, uint8_t *
 * @return		status 	- Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_low_if_write_rgb_to_gram(const ili9488_rgb_t * const p_rgb, const uint32_t size)
+ili9488_status_t ili9488_low_if_write_rgb_to_gram(const ili9488_rgb565_t * const p_rgb, const uint32_t size)
 {
 			ili9488_status_t 	status 	= eILI9488_OK;
 	const 	uint16_t 		 	cmd 	= eILI9488_WRITE_MEM_CMD;

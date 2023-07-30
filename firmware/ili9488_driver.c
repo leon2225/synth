@@ -54,8 +54,8 @@ static ili9488_status_t ili9488_driver_set_inversion_control	(void);
 static ili9488_status_t ili9488_driver_set_function_control		(void);
 static ili9488_status_t ili9488_driver_set_image_function		(void);
 
-static ili9488_rgb_t 	ili9488_driver_convert_color_to_rgb		(const ili9488_color_t color);
-static ili9488_status_t ili9488_driver_draw_hline				(const uint16_t page, const uint16_t col, const uint16_t length, const ili9488_color_t color);
+static ili9488_rgb565_t ili9488_driver_convert_to_rgb565		(const ili9488_rgb_t color);
+static ili9488_status_t ili9488_driver_draw_hline				(const uint16_t page, const uint16_t col, const uint16_t length, const ili9488_rgb_t color);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -718,84 +718,16 @@ ili9488_status_t ili9488_driver_read_memory(uint8_t * const p_mem, const uint32_
 * @return 		rgb		- RGB coded color
 */
 ////////////////////////////////////////////////////////////////////////////////
-static ili9488_rgb_t ili9488_driver_convert_color_to_rgb(const ili9488_color_t color)
+static ili9488_rgb565_t ili9488_driver_convert_to_rgb565(const ili9488_rgb_t color)
 {
-	ili9488_rgb_t rgb;
+	ili9488_rgb565_t rgb565;
 
-	switch( color )
-	{
-		case eILI9488_COLOR_BLACK:
-			rgb.R = 0x00U;
-			rgb.G = 0x00U;
-			rgb.B = 0x00U;
-			break;
+	// Convert color
+	rgb565.R = (uint8_t) ( color.r >> 3U );
+	rgb565.G = (uint8_t) ( color.g >> 2U );
+	rgb565.B = (uint8_t) ( color.b >> 3U );
 
-		case eILI9488_COLOR_BLUE:
-			rgb.R = 0x00U;
-			rgb.G = 0x00U;
-			rgb.B = 0x1FU;
-			break;
-
-
-		case eILI9488_COLOR_GREEN:
-			rgb.R = 0x00U;
-			rgb.G = 0x1FU;
-			rgb.B = 0x00U;
-			break;
-
-		case eILI9488_COLOR_TURQUOISE:
-			rgb.R = 0x00U;
-			rgb.G = 0x1FU;
-			rgb.B = 0x1FU;
-			break;
-
-		case eILI9488_COLOR_RED:
-			rgb.R = 0x1FU;
-			rgb.G = 0x00U;
-			rgb.B = 0x00U;
-			break;
-
-		case eILI9488_COLOR_PURPLE:
-			rgb.R = 0x1FU;
-			rgb.G = 0x00U;
-			rgb.B = 0x1FU;
-			break;
-
-		case eILI9488_COLOR_YELLOW:
-			rgb.R = 0x1FU;
-			rgb.G = 0x1FU;
-			rgb.B = 0x00U;
-			break;
-
-		case eILI9488_COLOR_WHITE:
-			rgb.R = 0x1FU;
-			rgb.G = 0x3FU;
-			rgb.B = 0x1FU;
-			break;
-
-		case eILI9488_COLOR_LIGHT_GRAY:
-			rgb.R = 0x17U;
-			rgb.G = 0x17U;
-			rgb.B = 0x17U;
-			break;
-
-		case eILI9488_COLOR_GRAY:
-			rgb.R = 0x0FU;
-			rgb.G = 0x0FU;
-			rgb.B = 0x0FU;
-			break;
-
-		default:
-			rgb.R = 0x00U;
-			rgb.G = 0x00U;
-			rgb.B = 0x00U;
-
-			ILI9488_DBG_PRINT( "Invalid color selection..." );
-			ILI9488_ASSERT( 0 );
-			break;
-	}
-
-	return rgb;
+	return rgb565;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -808,13 +740,13 @@ static ili9488_rgb_t ili9488_driver_convert_color_to_rgb(const ili9488_color_t c
 * @return[in]	status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_driver_set_pixel(const uint16_t page, const uint16_t col, const ili9488_color_t color)
+ili9488_status_t ili9488_driver_set_pixel(const uint16_t page, const uint16_t col, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
-	ili9488_rgb_t rgb;
+	ili9488_rgb565_t rgb;
 
 	// Convert color
-	rgb = ili9488_driver_convert_color_to_rgb( color );
+	rgb = ili9488_driver_convert_to_rgb565( color );
 
 	// Set cursor
 	status |= ili9488_driver_set_cursor( col, col, page, page );
@@ -837,11 +769,11 @@ ili9488_status_t ili9488_driver_set_pixel(const uint16_t page, const uint16_t co
 * @return		status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_driver_fill_rectangle(const uint16_t page, const uint16_t col, const uint16_t page_size, const uint16_t col_size, const ili9488_color_t color)
+ili9488_status_t ili9488_driver_fill_rectangle(const uint16_t page, const uint16_t col, const uint16_t page_size, const uint16_t col_size, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 	uint32_t pixel_size;
-	ili9488_rgb_t rgb;
+	ili9488_rgb565_t rgb;
 
 	// Check limits
 	if 	(	(( col + col_size ) > ILI9488_DISPLAY_SIZE_COLUMN )
@@ -854,7 +786,7 @@ ili9488_status_t ili9488_driver_fill_rectangle(const uint16_t page, const uint16
 	else
 	{
 		// Convert color
-		rgb = ili9488_driver_convert_color_to_rgb( color );
+		rgb = ili9488_driver_convert_to_rgb565( color );
 
 		// Calculate size of pixels
 		pixel_size = (uint32_t) ( col_size * page_size );
@@ -883,7 +815,7 @@ ili9488_status_t ili9488_driver_fill_rectangle(const uint16_t page, const uint16
 * @return		status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-static ili9488_status_t ili9488_driver_draw_hline(const uint16_t page, const uint16_t col, const uint16_t length, const ili9488_color_t color)
+static ili9488_status_t ili9488_driver_draw_hline(const uint16_t page, const uint16_t col, const uint16_t length, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 	uint16_t i;
@@ -909,7 +841,7 @@ static ili9488_status_t ili9488_driver_draw_hline(const uint16_t page, const uin
 * @return		status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_driver_fill_circle(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_color_t color)
+ili9488_status_t ili9488_driver_fill_circle(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 	int32_t  D;
@@ -1005,7 +937,7 @@ ili9488_status_t ili9488_driver_fill_circle(const uint16_t page, const uint16_t 
 * @return		status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_driver_set_circle(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_color_t color)
+ili9488_status_t ili9488_driver_set_circle(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 	int32_t  D;
@@ -1069,7 +1001,7 @@ ili9488_status_t ili9488_driver_set_circle(const uint16_t page, const uint16_t c
 * @return		status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, const uint16_t col, const ili9488_color_t fg_color, const ili9488_color_t  bg_color, const ili9488_font_opt_t font_opt)
+ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, const uint16_t col, const ili9488_rgb_t fg_color, const ili9488_rgb_t  bg_color, const ili9488_font_opt_t font_opt)
 {
 	ili9488_status_t status = eILI9488_OK;
 	uint32_t lut_offset;
@@ -1148,7 +1080,7 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 * @return		status - Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_driver_set_string(const char *str, const uint16_t page, const uint16_t col, const ili9488_color_t fg_color, const ili9488_color_t  bg_color, const ili9488_font_opt_t font_opt)
+ili9488_status_t ili9488_driver_set_string(const char *str, const uint16_t page, const uint16_t col, const ili9488_rgb_t fg_color, const ili9488_rgb_t  bg_color, const ili9488_font_opt_t font_opt)
 {
 	ili9488_status_t status = eILI9488_OK;
 	uint16_t page_walker = page;
