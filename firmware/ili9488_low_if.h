@@ -34,15 +34,7 @@
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * 	RGB color code
- */
-typedef struct
-{
-	unsigned int R : 5;	/**<Red color */
-	unsigned int G : 6;	/**<Green color */
-	unsigned int B : 5;	/**<Blue color */
-} ili9488_rgb_t;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function Prototypes

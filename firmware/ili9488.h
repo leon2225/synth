@@ -27,20 +27,13 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
-//#include "../../ili9488.h"
+//#include "ili9488_low_if.h"
 #include <stdint.h>
 #include <stdbool.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-// Definitions
+// Typedefs
 ////////////////////////////////////////////////////////////////////////////////
-
-/**
- * 	Module version
- */
-#define ILI9488_VER_MAJOR		( 1 )
-#define ILI9488_VER_MINOR		( 0 )
-#define ILI9488_VER_DEVELOP		( 0 )
 
 // General status
 typedef enum
@@ -50,7 +43,6 @@ typedef enum
 	eILI9488_ERROR_SPI	= 0x02,		/**<SPI interface error */
 } ili9488_status_t;
 
-// Colors
 typedef enum
 {
 	eILI9488_COLOR_BLACK = 0,
@@ -65,6 +57,16 @@ typedef enum
 	eILI9488_COLOR_GRAY,
 
 } ili9488_color_t;
+
+/**
+ * 	RGB color code
+ */
+typedef struct
+{
+	unsigned int R : 5;	/**<Red color */
+	unsigned int G : 6;	/**<Green color */
+	unsigned int B : 5;	/**<Blue color */
+} ili9488_rgb_t;
 
 // Font options
 typedef enum
@@ -141,6 +143,30 @@ typedef struct
 	} border;
 
 } ili9488_circ_attr_t;
+
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * 	Module version
+ */
+#define ILI9488_VER_MAJOR		( 1 )
+#define ILI9488_VER_MINOR		( 0 )
+#define ILI9488_VER_DEVELOP		( 0 )
+
+// Colors
+#define ILI9488_COLOR_BLACK			( {ili9488_rgb_t c = {0x00, 0x00, 0x00}; c;} )
+#define ILI9488_COLOR_BLUE			( {ili9488_rgb_t c = {0x00, 0x00, 0x1F}; c;} )
+#define ILI9488_COLOR_GREEN			( {ili9488_rgb_t c = {0x00, 0x3F, 0x00}; c;} )
+#define ILI9488_COLOR_TURQUOISE		( {ili9488_rgb_t c = {0x00, 0x3F, 0x1F}; c;} )
+#define ILI9488_COLOR_RED			( {ili9488_rgb_t c = {0x1F, 0x00, 0x00}; c;} )
+#define ILI9488_COLOR_PURPLE		( {ili9488_rgb_t c = {0x1F, 0x00, 0x1F}; c;} )
+#define ILI9488_COLOR_YELLOW		( {ili9488_rgb_t c = {0x1F, 0x3F, 0x00}; c;} )
+#define ILI9488_COLOR_WHITE			( {ili9488_rgb_t c = {0x1F, 0x3F, 0x1F}; c;} )
+#define ILI9488_COLOR_LIGHT_GRAY	( {ili9488_rgb_t c = {0x0F, 0x2F, 0x0F}; c;} )
+#define ILI9488_COLOR_GRAY			( {ili9488_rgb_t c = {0x17, 0x2F, 0x17}; c;} )
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function Prototypes
