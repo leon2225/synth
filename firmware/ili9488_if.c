@@ -110,7 +110,7 @@ ili9488_status_t ili9488_if_init(void)
 	gpio_set_function( eGPIO_D_MOSI, GPIO_FUNC_SPI );
 	gpio_set_function( eGPIO_D_MISO, GPIO_FUNC_SPI );
 
-	spi_init( eGPIO_SPI, 50 * 1000 * 1000 );
+	spi_init( eGPIO_SPI, 60 * 1000 * 1000 );
 	spi_set_format( eGPIO_SPI, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST );
 
 	// Init DMA
