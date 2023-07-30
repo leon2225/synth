@@ -40,8 +40,8 @@
 // Pen
 typedef struct
 {
-	ili9488_color_t 	fg_color;
-	ili9488_color_t 	bg_color;
+	ili9488_rgb_t 	fg_color;
+	ili9488_rgb_t 	bg_color;
 	ili9488_font_opt_t	font_opt;
 } ili9488_pen_t;
 
@@ -69,9 +69,9 @@ static bool gb_is_init;
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
-static ili9488_status_t ili9488_fill_round_rectangle(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_color_t color, const uint8_t radius);
-static ili9488_status_t ili9488_fill_rectangle		(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_color_t color);
-static ili9488_status_t ili9488_fill_circle			(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_color_t color);
+static ili9488_status_t ili9488_fill_round_rectangle(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_rgb_t color, const uint8_t radius);
+static ili9488_status_t ili9488_fill_rectangle		(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_rgb_t color);
+static ili9488_status_t ili9488_fill_circle			(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_rgb_t color);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -103,8 +103,8 @@ ili9488_status_t ili9488_init(void)
 		}
 
 		// Init string pen
-		g_stringPen.bg_color = eILI9488_COLOR_BLACK;
-		g_stringPen.fg_color = eILI9488_COLOR_WHITE;
+		g_stringPen.bg_color = ILI9488_COLOR_BLACK;
+		g_stringPen.fg_color = ILI9488_COLOR_WHITE;
 		g_stringPen.font_opt = eILI9488_FONT_16;
 
 		// Init string cursor
@@ -124,7 +124,7 @@ ili9488_status_t ili9488_init(void)
 * @return 		status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_set_background(const ili9488_color_t color)
+ili9488_status_t ili9488_set_background(const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 
@@ -149,6 +149,26 @@ ili9488_status_t ili9488_set_background(const ili9488_color_t color)
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
+ * 		Convert hex styled uint32_t to ili9488_rgb_t
+ * 
+ * @param[in] 	color - Hex value
+ * @return 		rgb - RGB value
+ */
+////////////////////////////////////////////////////////////////////////////////
+
+ili9488_rgb_t ili9488_hex_to_rgb (const uint32_t color)
+{
+	ili9488_rgb_t rgb;
+
+	rgb.r = (color >> 16) & 0xFF;
+	rgb.g = (color >> 8) & 0xFF;
+	rgb.b = color & 0xFF;
+
+	return rgb;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
 *		Set string pen
 *
 * @param[in]	fg_color - Foreground color
@@ -157,7 +177,7 @@ ili9488_status_t ili9488_set_background(const ili9488_color_t color)
 * @return 		status - Always OK
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_set_string_pen(const ili9488_color_t fg_color, const ili9488_color_t bg_color, const ili9488_font_opt_t font_opt)
+ili9488_status_t ili9488_set_string_pen(const ili9488_rgb_t fg_color, const ili9488_rgb_t bg_color, const ili9488_font_opt_t font_opt)
 {
 	ili9488_status_t status = eILI9488_OK;
 
@@ -412,8 +432,8 @@ ili9488_status_t ili9488_draw_rectangle(const ili9488_rect_attr_t * const p_rect
 	uint16_t s_col;
 	uint16_t page_size;
 	uint16_t col_size;
-	ili9488_color_t border_color;
-	ili9488_color_t fill_color;
+	ili9488_rgb_t border_color;
+	ili9488_rgb_t fill_color;
 	uint8_t border_width;
 	uint8_t radius;
 
@@ -510,7 +530,7 @@ ili9488_status_t ili9488_draw_rectangle(const ili9488_rect_attr_t * const p_rect
 * @return		status 	- Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-static ili9488_status_t ili9488_fill_round_rectangle(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_color_t color, const uint8_t radius)
+static ili9488_status_t ili9488_fill_round_rectangle(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_rgb_t color, const uint8_t radius)
 {
 	ili9488_status_t status = eILI9488_OK;
 
@@ -550,7 +570,7 @@ static ili9488_status_t ili9488_fill_round_rectangle(const uint16_t page, const 
 * @return		status 		- Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_fill_rectangle(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_color_t color)
+ili9488_status_t ili9488_fill_rectangle(const uint16_t page, const uint16_t col, const uint16_t p_size, const uint16_t c_size, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 
@@ -587,8 +607,8 @@ ili9488_status_t ili9488_draw_circle(const ili9488_circ_attr_t * const p_circle_
 	uint16_t s_page;
 	uint16_t s_col;
 	uint16_t radius;
-	ili9488_color_t fill_color;
-	ili9488_color_t border_color;
+	ili9488_rgb_t fill_color;
+	ili9488_rgb_t border_color;
 	uint16_t border_width;
 
 	// Check if init
@@ -650,7 +670,7 @@ ili9488_status_t ili9488_draw_circle(const ili9488_circ_attr_t * const p_circle_
 * @return 		status 	- Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-static ili9488_status_t ili9488_fill_circle(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_color_t color)
+static ili9488_status_t ili9488_fill_circle(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_rgb_t color)
 {
 	ili9488_status_t status = eILI9488_OK;
 

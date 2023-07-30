@@ -132,12 +132,12 @@ ili9488_status_t ili9488_driver_write_memory				(const uint8_t * const p_mem, co
 ili9488_status_t ili9488_driver_read_memory					(uint8_t * const p_mem, const uint32_t size);
 
 // Graphics functions
-ili9488_status_t ili9488_driver_set_pixel					(const uint16_t page, const uint16_t col, const ili9488_color_t color);
-ili9488_status_t ili9488_driver_fill_rectangle				(const uint16_t page, const uint16_t col, const uint16_t page_size, const uint16_t col_size, const ili9488_color_t color);
-ili9488_status_t ili9488_driver_fill_circle					(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_color_t color);
-ili9488_status_t ili9488_driver_set_circle					(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_color_t color);
-ili9488_status_t ili9488_driver_set_char					(const uint8_t ch, const uint16_t page, const uint16_t col, const ili9488_color_t fg_color, const ili9488_color_t  bg_color, const ili9488_font_opt_t font_opt);
-ili9488_status_t ili9488_driver_set_string					(const char *str, const uint16_t page, const uint16_t col, const ili9488_color_t fg_color, const ili9488_color_t  bg_color, const ili9488_font_opt_t font_opt);
+ili9488_status_t ili9488_driver_set_pixel					(const uint16_t page, const uint16_t col, const ili9488_rgb_t color);
+ili9488_status_t ili9488_driver_fill_rectangle				(const uint16_t page, const uint16_t col, const uint16_t page_size, const uint16_t col_size, const ili9488_rgb_t color);
+ili9488_status_t ili9488_driver_fill_circle					(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_rgb_t color);
+ili9488_status_t ili9488_driver_set_circle					(const uint16_t page, const uint16_t col, const uint16_t radius, const ili9488_rgb_t color);
+ili9488_status_t ili9488_driver_set_char					(const uint8_t ch, const uint16_t page, const uint16_t col, const ili9488_rgb_t fg_color, const ili9488_rgb_t  bg_color, const ili9488_font_opt_t font_opt);
+ili9488_status_t ili9488_driver_set_string					(const char *str, const uint16_t page, const uint16_t col, const ili9488_rgb_t fg_color, const ili9488_rgb_t  bg_color, const ili9488_font_opt_t font_opt);
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
