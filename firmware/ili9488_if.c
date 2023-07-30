@@ -243,7 +243,13 @@ ili9488_status_t ili9488_if_spi_transmit(const uint16_t * p_data, const uint32_t
                           size, 							// element count
                           true                   			// start immediately
     );
+
+	ili9488_if_pause_dma();
+	ili9488_if_set_cs( true );
+	ili9488_if_set_cs( false );
+	ili9488_if_resume_dma();
 	
+
 	// wait if transfer is not finished for blocking mode
 	if ( true == blocking )
 	{
@@ -360,7 +366,7 @@ ili9488_status_t ili9488_if_dma_init(void)
  * @return  false - Transaction not in progress
  */
 ////////////////////////////////////////////////////////////////////////////////
-bool ili9488_if_is_transaction_in_progress( void )
+bool ili9488_if_dma_busy( void )
 {
 	return dma_channel_is_busy(g_dmaChannel) || spi_is_busy(eGPIO_SPI);
 }
@@ -372,12 +378,41 @@ bool ili9488_if_is_transaction_in_progress( void )
 ////////////////////////////////////////////////////////////////////////////////
 void ili9488_if_wait_for_ready( void )
 {
-	while (ili9488_if_is_transaction_in_progress())
+	while (ili9488_if_dma_busy())
 	{
 		tight_loop_contents();
 	}
 	return;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * 	  Pauses DMA transfer
+ */
+////////////////////////////////////////////////////////////////////////////////
+void ili9488_if_pause_dma( void )
+{
+	dma_hw->ch[g_dmaChannel].ctrl_trig &= ~0x1;
+	while(spi_is_busy(eGPIO_SPI)){};
+	return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * 	  Resumes DMA transfer
+ * 		But only when DMA isn't finished, otherwise it would restart 
+ * 		the previous transfer
+ */
+////////////////////////////////////////////////////////////////////////////////
+void ili9488_if_resume_dma( void )
+{
+	if(dma_channel_is_busy(g_dmaChannel))
+	{
+		dma_hw->ch[g_dmaChannel].ctrl_trig |= 0x1;
+	}
+	return;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
