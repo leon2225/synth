@@ -26,7 +26,6 @@
 #include "ili9488_cfg.h"
 #include "ili9488_if.h"
 #include "pico/stdlib.h"
-//#include "../../pico/stdlib.h"
 
 // Strings
 #include <stdio.h>
