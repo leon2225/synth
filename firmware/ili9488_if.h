@@ -1,4 +1,3 @@
-#pragma once
 // Copyright (c) 2021 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
@@ -23,7 +22,9 @@
 
 #ifndef _ILI9488_IF_H_
 #define _ILI9488_IF_H_
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,4 +67,7 @@ ili9488_status_t 	ili9488_if_spi_transmit_8b	(const uint8_t * p_data, const uint
 ili9488_status_t 	ili9488_if_spi_receive	    (uint16_t * p_data, const uint32_t size);
 ili9488_status_t 	ili9488_if_spi_receive_8b   (uint8_t * p_data, const uint32_t size);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // _ILI9488_IF_H_
