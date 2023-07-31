@@ -392,8 +392,13 @@ void ili9488_if_wait_for_ready( void )
 ////////////////////////////////////////////////////////////////////////////////
 void ili9488_if_pause_dma( void )
 {
+	volatile uint32_t dummy;
 	dma_hw->ch[g_dmaChannel].ctrl_trig &= ~0x1;
 	while(spi_is_busy(eGPIO_SPI)){};
+	while(spi_is_readable(eGPIO_SPI))
+	{
+		dummy = spi_get_hw(eGPIO_SPI)->dr;
+	}
 	return;
 }
 
