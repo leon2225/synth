@@ -137,9 +137,9 @@ void ToneSheduler::cyclicHandler()
 
     if (fillBuffer)
     {
-        gpio_xor_mask(USE_DEBUG_PINS<<DEBUG3_PIN);
+        //gpio_xor_mask(USE_DEBUG_PINS<<DEBUG3_PIN);
         fillBufferCallback(buffer, bufferLength);
-        gpio_xor_mask(USE_DEBUG_PINS<<DEBUG3_PIN);
+        //gpio_xor_mask(USE_DEBUG_PINS<<DEBUG3_PIN);
     }
 }
 

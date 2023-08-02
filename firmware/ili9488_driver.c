@@ -36,6 +36,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
+extern const uint DEBUG1_PIN;
+extern const uint DEBUG2_PIN;
+extern const uint DEBUG3_PIN;
+extern const uint DEBUG4_PIN;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -1013,6 +1018,9 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 	uint8_t line_bit_offset;
 	uint8_t char_lut_size;
 
+	// Old function takes 9.1ms
+	gpio_put( DEBUG3_PIN, 1);
+
 	// Get font data
 	p_font = ili9488_font_get( font_opt );
 
@@ -1062,6 +1070,7 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 	{
 		status = eILI9488_ERROR;
 	}
+	gpio_put( DEBUG3_PIN, 0);
 
 	return status;
 }

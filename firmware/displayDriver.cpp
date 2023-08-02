@@ -46,6 +46,8 @@ void displayInit() {
     eraseRect.rounded.enable      = false;
     eraseRect.fill.color          =  ili9488_hex_to_rgb( 0xFFFFFF );
 
+    ili9488_set_string_pen( ILI9488_COLOR_BLACK, ILI9488_COLOR_WHITE, eILI9488_FONT_24);
+    ili9488_set_cursor( 20, 20 );
 
     int32_t x = 0;
     int32_t y = 0; 
@@ -70,8 +72,7 @@ void displayInit() {
                 rect_attr.position.y = y - penRadius;
                 ili9488_draw_rectangle( &rect_attr );
 
-
-                //printf("x: %d, y: %d\n", x, y);
+                ili9488_printf("x: %4d, y: %4d", x, y);
             }
             nextTime = time_us_32() + 10000;
         }
@@ -84,7 +85,5 @@ void initDisplay() {
     XPT2046_Init();
 
     // set background to bg
-    gpio_put(DEBUG3_PIN, 1);
     ili9488_set_background( ILI9488_COLOR_WHITE );
-    gpio_put(DEBUG3_PIN, 0);
 }
