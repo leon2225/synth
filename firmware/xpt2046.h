@@ -26,9 +26,9 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-    uint16_t x;
-    uint16_t y;
-    bool pressed;
+    uint16_t    x;
+    uint16_t    y;
+    uint16_t    pressure;
 } XPT2046_TouchData_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,13 +38,14 @@ typedef struct
 #define XPT2046_SPI     spi1
 #define XPT2046_CS      16
 #define XPT2046_IRQ     17
-#define XPT2046_FREQ    2.5 * 1000 * 1000
+#define XPT2046_FREQ    (2.5 * 1000 * 1000)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function Prototypes
 ////////////////////////////////////////////////////////////////////////////////
-void                XPT2046_Init    (void);
-XPT2046_TouchData_t XPT2046_Read    (void);
+void                    XPT2046_Init            (void);
+XPT2046_TouchData_t     XPT2046_getTouch        (void);
+void                    XPT2046_update          (void);
 
 #ifdef __cplusplus
 }
