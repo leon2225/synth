@@ -17,11 +17,14 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "math.h"
+#include <string>
 
 #include "ili9488.h"
 #include "xpt2046.h"
 
 #include "rectangle.h"
+#include "text.h"
+#include "label.h"
 
 ////////////////////////////////////////
 // Defines
@@ -31,8 +34,8 @@ extern const uint DEBUG2_PIN;
 extern const uint DEBUG3_PIN;
 extern const uint DEBUG4_PIN;
 
-#define UPDATE_RATE_DISPLAY (120)
-#define UPDATE_RATE_TOUCH   (120)
+#define UPDATE_RATE_DISPLAY (30)
+#define UPDATE_RATE_TOUCH   (30)
 
 //periods for display and touch taks in us
 const uint32_t DISPLAY_PERIOD = 1000000 / UPDATE_RATE_DISPLAY;
@@ -68,10 +71,6 @@ void ui_setup() {
 
     // set background to bg
     ili9488_set_background( ILI9488_COLOR_WHITE );
-
-    // set pen colors
-    ili9488_set_string_pen( ILI9488_COLOR_GRAY, ILI9488_COLOR_YELLOW, eILI9488_FONT_24);
-    ili9488_set_cursor( 20, 20 );
 }
 
 /**
@@ -80,14 +79,13 @@ void ui_setup() {
  */
 void ui_loop() {
     uint32_t now = time_us_32();
-    if( g_nextTime_display <= now ) {
-        ui_updateDisplay();
-        g_nextTime_display = now + DISPLAY_PERIOD;
-    }
-
     if( g_nextTime_touch <= now ) {
         ui_updateTouch();
         g_nextTime_touch = now + TOUCH_PERIOD;
+    }
+    if( g_nextTime_display <= now ) {
+        ui_updateDisplay();
+        g_nextTime_display = now + DISPLAY_PERIOD;
     }
 }
 
@@ -96,23 +94,44 @@ void ui_loop() {
  * 
  */
 void ui_updateDisplay() {
-    static Rectangle rect = Rectangle(0, 0, 10, 10, ILI9488_COLOR_RED);
+    const uint32_t crossSize = 20;
+
+    static uint16_t x = 15, y = 15;
+
+    static Rectangle verticalLine = Rectangle(x-1, y-10, 2, crossSize, ILI9488_COLOR_RED);
+    static Rectangle horizontalLine = Rectangle(x-10, y-1, crossSize, 2, ILI9488_COLOR_RED);
+    static Text text = Text(0, 0, "", ILI9488_COLOR_WHITE, ILI9488_COLOR_BLACK, eILI9488_FONT_24);
+    static Label label = Label(100, 100, 250, 50, "Test", ILI9488_COLOR_YELLOW, ILI9488_COLOR_BLACK, eILI9488_FONT_24, LabelAlignment::CENTER);
+
     const int redrawDistance = 2;
 
     XPT2046_TouchData_t touch = XPT2046_getTouch();
 
     if (touch.pressure) {
-        
-        if((abs(touch.x - rect.getX()) > redrawDistance) || (abs(touch.y - rect.getY()) > redrawDistance))
+        if((abs(touch.x - x) > redrawDistance) || (abs(touch.y - x) > redrawDistance))
         {
-            rect.erase(ILI9488_COLOR_WHITE);
+            x = touch.x;
+            y = touch.y;
 
-            rect.setX(touch.x);
-            rect.setY(touch.y);
+            gpio_put(DEBUG1_PIN, 1);
+            verticalLine.erase(ILI9488_COLOR_WHITE);
+            horizontalLine.erase(ILI9488_COLOR_WHITE);
 
-            rect.draw();
+            verticalLine.setX(x-1);
+            verticalLine.setY(y -crossSize/2);
+            horizontalLine.setX(x -crossSize/2);
+            horizontalLine.setY(y-1);
+            std::string str = "X:" + std::to_string(touch.x) + ", Y:" + std::to_string(touch.y);
+            text.setText(str);
+            label.setText(str);
+            
 
-            //ili9488_printf("x: %4d, y: %4d", x, y);
+            //text.draw();
+            verticalLine.draw();
+            horizontalLine.draw();
+            label.draw();
+
+            gpio_put(DEBUG1_PIN, 0);
         } 
     }
 }
