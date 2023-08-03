@@ -42,13 +42,13 @@ const uint32_t min_y = 3870;
 
 #define Z_THRESHOLD     300
 #define Z_THRESHOLD_INT	75
-#define MSEC_THRESHOLD  (3 * 1000)
+#define MSEC_THRESHOLD  (30 * 1000)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
 int32_t xraw=0, yraw=0, zraw=0;
-uint32_t usraw=0x80000000;
+uint32_t usraw=0x00000000;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -113,10 +113,11 @@ void XPT2046_update()
 
     // only update every MSEC_THRESHOLD ms
 	uint32_t now = time_us_32();
-	if (now - usraw < MSEC_THRESHOLD)
+	if ((now - usraw) < MSEC_THRESHOLD)
     {
         return;
     }
+    usraw = now;
 
     // Pause display-DMA
     ili9488_if_pause_dma();
@@ -168,7 +169,6 @@ void XPT2046_update()
 	int16_t x = besttwoavg( rxBuffer[4] >> 3, rxBuffer[6] >> 3, rxBuffer[8] >> 3);
 	int16_t y = besttwoavg( rxBuffer[5] >> 3, rxBuffer[7] >> 3, rxBuffer[9] >> 3);
 
-    usraw = now;	// good read completed, set wait
     xraw = x;
     yraw = y;
 }
