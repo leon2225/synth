@@ -237,6 +237,7 @@ ili9488_status_t ili9488_if_spi_transmit(const uint16_t * p_data, const uint32_t
 
 	// start DMA transfer
 	channel_config_set_read_increment(&g_dmaConfig, incrementSrc);
+	channel_config_set_transfer_data_size(&g_dmaConfig, DMA_SIZE_16);
 	dma_channel_configure(g_dmaChannel, &g_dmaConfig,
                           &spi_get_hw(eGPIO_SPI)->dr,		// write address
                           incrementSrc?p_data:(const uint16_t*)&g_constData,	// read address

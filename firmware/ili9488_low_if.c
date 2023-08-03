@@ -169,10 +169,11 @@ ili9488_status_t ili9488_low_if_read_register(const ili9488_cmd_t cmd, uint8_t *
 *
 * @param[in]	p_rgb 	- Pointer to rgb code
 * @param[in]	size 	- Number of data to transmit
+* @param[in]	increment - Increment address after each write
 * @return		status 	- Either Ok or Error
 */
 ////////////////////////////////////////////////////////////////////////////////
-ili9488_status_t ili9488_low_if_write_rgb_to_gram(uint16_t * const p_rgb, const uint32_t size)
+ili9488_status_t ili9488_low_if_write_rgb_to_gram(uint16_t * const p_rgb, const uint32_t size, const bool increment)
 {
 			ili9488_status_t 	status 	= eILI9488_OK;
 	const 	uint16_t 		 	cmd 	= eILI9488_WRITE_MEM_CMD;
@@ -199,7 +200,7 @@ ili9488_status_t ili9488_low_if_write_rgb_to_gram(uint16_t * const p_rgb, const 
 			// Data transmit
 			ILI9488_LOW_IF_DC_DATA();
 
-			ili9488_if_spi_transmit((uint16_t*) p_rgb, size, 0, 0 );
+			ili9488_if_spi_transmit((uint16_t*) p_rgb, size, increment, 0 );
 		}
 	}
 

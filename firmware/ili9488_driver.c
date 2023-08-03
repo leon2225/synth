@@ -26,11 +26,13 @@
 #include "ili9488_cfg.h"
 #include "ili9488_if.h"
 #include "pico/stdlib.h"
+#include "pico/mem_ops.h"
 
 // Strings
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,6 +47,8 @@ extern const uint DEBUG4_PIN;
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
+uint16_t g_charBuffer[2][ILI9488_MAX_FONT_HEIGHT * ILI9488_MAX_FONT_WIDTH];	
+uint8_t g_charBufferIdx = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -756,7 +760,7 @@ ili9488_status_t ili9488_driver_set_pixel(const uint16_t page, const uint16_t co
 	status |= ili9488_driver_set_cursor( col, col, page, page );
 
 	// Write memory
-	ili9488_low_if_write_rgb_to_gram( &rgb, 1U );
+	ili9488_low_if_write_rgb_to_gram( &rgb, 1U, false);
 
 	return status;
 }
@@ -802,7 +806,7 @@ ili9488_status_t ili9488_driver_fill_rectangle(const uint16_t page, const uint16
 		status |= ili9488_driver_set_cursor( col, col + col_size - 1, page, page + page_size - 1);
 
 		// Write to memory
-		status |= ili9488_low_if_write_rgb_to_gram( &rgb, pixel_size );
+		status |= ili9488_low_if_write_rgb_to_gram( &rgb, pixel_size, false);
 	}
 
 	return status;
@@ -1007,6 +1011,9 @@ ili9488_status_t ili9488_driver_set_circle(const uint16_t page, const uint16_t c
 ////////////////////////////////////////////////////////////////////////////////
 ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, const uint16_t col, const ili9488_rgb_t fg_color, const ili9488_rgb_t  bg_color, const ili9488_font_opt_t font_opt)
 {
+	uint16_t bg_color_u16 = ili9488_driver_convert_to_rgb565(bg_color);
+	uint16_t fg_color_u16 = ili9488_driver_convert_to_rgb565(fg_color);
+
 	ili9488_status_t status = eILI9488_OK;
 	uint32_t lut_offset;
 	uint8_t i;
@@ -1018,11 +1025,22 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 	uint8_t line_bit_offset;
 	uint8_t char_lut_size;
 
-	// Old function takes 9.1ms
-	gpio_put( DEBUG3_PIN, 1);
-
 	// Get font data
 	p_font = ili9488_font_get( font_opt );
+
+	// Old function takes 9.1ms
+	// New function takes 250us
+	gpio_put( DEBUG1_PIN, 1);
+
+	// Clear buffer (memset for 16bit seems not to work)
+	uint16_t *buf = g_charBuffer[!g_charBufferIdx];
+	int16_t count = (p_font->width) * p_font->height;
+    while(count--) *buf++ = bg_color_u16;
+	
+
+	gpio_put( DEBUG1_PIN, 0);
+	gpio_put( DEBUG2_PIN, 1);
+
 
 	// Check pinter
 	if ( NULL != p_font )
@@ -1049,20 +1067,27 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 			// Every pixel
 			for( j = line_bit_offset; j < line_size_bit; j++ )
 			{
-				// NOTE: Font width is multiply by two for offset, as char start to draw from right to left
-				// Pixel set
+				
 				if ( line & ( 1 << j ))
 				{
-					ili9488_driver_set_pixel( page + (( 2U * p_font -> width ) - j -1U ), col + i, fg_color );
-				}
-
-				// Pixel cleared
-				else
-				{
-					ili9488_driver_set_pixel( page + (( 2U * p_font -> width ) - j - 1U ), col + i, bg_color );
+					g_charBuffer[!g_charBufferIdx][ ( i ) + ( (line_size_bit - j) * p_font -> height) ] = fg_color_u16;
 				}
 			}
 		}
+		gpio_put( DEBUG2_PIN, 0);
+		gpio_put( DEBUG3_PIN, 1);
+
+		// Wait until previous operation is finished
+		ili9488_if_wait_for_ready();
+		// Swap buffer when previous operation is finished
+		g_charBufferIdx = !g_charBufferIdx;
+
+		// Set cursor
+		status |= ili9488_driver_set_cursor( col, col + p_font->height - 1, page, page + p_font->width - 1);
+
+		// Write to memory
+		status |= ili9488_low_if_write_rgb_to_gram( (uint16_t * const) &g_charBuffer[g_charBufferIdx], (p_font->width) * p_font->height, true);
+
 	}
 
 	// No font

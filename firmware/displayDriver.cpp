@@ -46,7 +46,7 @@ void displayInit() {
     eraseRect.rounded.enable      = false;
     eraseRect.fill.color          =  ili9488_hex_to_rgb( 0xFFFFFF );
 
-    ili9488_set_string_pen( ILI9488_COLOR_BLACK, ILI9488_COLOR_WHITE, eILI9488_FONT_24);
+    ili9488_set_string_pen( ILI9488_COLOR_GRAY, ILI9488_COLOR_YELLOW, eILI9488_FONT_24);
     ili9488_set_cursor( 20, 20 );
 
     int32_t x = 0;
@@ -56,23 +56,27 @@ void displayInit() {
         tight_loop_contents();
         XPT2046_update();
         if( nextTime <= time_us_32() ) {
+
+
+
             XPT2046_TouchData_t touch = XPT2046_getTouch();
             if (touch.pressure) {
-                eraseRect.position.x = x - penRadius;
-                eraseRect.position.y = y - penRadius;
-                ili9488_draw_rectangle( &eraseRect );
                 
                 if(abs(touch.x - x) > redrawDistance || abs(touch.y - y) > redrawDistance)
                 {
+                    eraseRect.position.x = x - penRadius;
+                    eraseRect.position.y = y - penRadius;
+                    ili9488_draw_rectangle( &eraseRect );
+
                     x = touch.x;
                     y = touch.y;
+
+                    rect_attr.position.x = x - penRadius;
+                    rect_attr.position.y = y - penRadius;
+                    ili9488_draw_rectangle( &rect_attr );
+
+                    ili9488_printf("x: %4d, y: %4d", x, y);
                 } 
-
-                rect_attr.position.x = x - penRadius;
-                rect_attr.position.y = y - penRadius;
-                ili9488_draw_rectangle( &rect_attr );
-
-                ili9488_printf("x: %4d, y: %4d", x, y);
             }
             nextTime = time_us_32() + 10000;
         }

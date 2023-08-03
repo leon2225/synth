@@ -49,7 +49,7 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 ili9488_status_t 	ili9488_low_if_write_register		(const ili9488_cmd_t cmd, const uint8_t * const tx_data, const uint32_t size);
 ili9488_status_t 	ili9488_low_if_read_register		(const ili9488_cmd_t cmd, uint8_t * const rx_data, const uint32_t size);
-ili9488_status_t 	ili9488_low_if_write_rgb_to_gram 	(uint16_t * const p_rgb, const uint32_t size);
+ili9488_status_t 	ili9488_low_if_write_rgb_to_gram 	(uint16_t * const p_rgb, const uint32_t size, const bool increment);
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
