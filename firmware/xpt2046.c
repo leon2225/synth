@@ -42,7 +42,6 @@ const uint32_t min_y = 3870;
 
 #define Z_THRESHOLD     300
 #define Z_THRESHOLD_INT	75
-#define MSEC_THRESHOLD  (30 * 1000)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -110,14 +109,6 @@ void XPT2046_update()
 	int16_t data[6];
 	int z;
     uint32_t displayBaudrate = spi_get_baudrate(XPT2046_SPI);
-
-    // only update every MSEC_THRESHOLD ms
-	uint32_t now = time_us_32();
-	if ((now - usraw) < MSEC_THRESHOLD)
-    {
-        return;
-    }
-    usraw = now;
 
     // Pause display-DMA
     ili9488_if_pause_dma();

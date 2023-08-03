@@ -4,7 +4,7 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-#include "displayDriver.h"
+#include "ui.h"
 
 #define FLAG_VALUE 123
  
@@ -20,7 +20,7 @@ void core1_entry() {
     else
         printf("Its all gone well on core 1!");
  
-    displayInit();
+    ui_setup();
     while (1)
-        tight_loop_contents();
+        ui_loop();
 }

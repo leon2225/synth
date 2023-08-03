@@ -1030,18 +1030,12 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 
 	// Old function takes 9.1ms
 	// New function takes 250us
-	gpio_put( DEBUG1_PIN, 1);
 
 	// Clear buffer (memset for 16bit seems not to work)
 	uint16_t *buf = g_charBuffer[!g_charBufferIdx];
 	int16_t count = (p_font->width) * p_font->height;
     while(count--) *buf++ = bg_color_u16;
 	
-
-	gpio_put( DEBUG1_PIN, 0);
-	gpio_put( DEBUG2_PIN, 1);
-
-
 	// Check pinter
 	if ( NULL != p_font )
 	{
@@ -1074,9 +1068,6 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 				}
 			}
 		}
-		gpio_put( DEBUG2_PIN, 0);
-		gpio_put( DEBUG3_PIN, 1);
-
 		// Wait until previous operation is finished
 		ili9488_if_wait_for_ready();
 		// Swap buffer when previous operation is finished
@@ -1095,7 +1086,6 @@ ili9488_status_t ili9488_driver_set_char(const uint8_t ch, const uint16_t page, 
 	{
 		status = eILI9488_ERROR;
 	}
-	gpio_put( DEBUG3_PIN, 0);
 
 	return status;
 }
