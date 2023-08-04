@@ -11,23 +11,20 @@
 *@version	V1.0.0
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "point.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Data types
 ////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-    uint16_t    x;
-    uint16_t    y;
+    Point       position;
     uint16_t    pressure;
 } XPT2046_TouchData_t;
 
@@ -46,7 +43,3 @@ typedef struct
 void                    XPT2046_Init            (void);
 XPT2046_TouchData_t     XPT2046_getTouch        (void);
 void                    XPT2046_update          (void);
-
-#ifdef __cplusplus
-}
-#endif

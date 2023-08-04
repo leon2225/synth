@@ -14,23 +14,21 @@
 #include "stdint.h"
 #include "ili9488.h"
 #include <string>
+#include "point.h"
 
 class Text{
     public:
-        Text( uint16_t x, uint16_t y, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, bool autoErase = true);
+        Text( Point position, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, bool autoErase = true);
         ~Text();
 
-        uint16_t getX(){ return this->x;}
-        uint16_t getY(){ return this->y;}
-        uint16_t getWidth(){ return this->width;}
-        uint16_t getHeight(){ return this->height;}
+        Point getPosition(){ return this->position;}
+        Point getSize(){ return this->size;}
         uint16_t getFont(){ return this->font;}
         ili9488_rgb_t getTextColor(){ return this->textColor;}
         ili9488_rgb_t getBgColor(){ return this->bgColor;}
         std::string getText(){ return this->text;}
 
-        void setX( uint16_t x ){ this->x = x; updatePosition();}
-        void setY( uint16_t y ){ this->y = y; updatePosition();}
+        void setPosition( Point position ){ this->position = position; updatePosition();}
         void setFont( ili9488_font_opt_t font ){ this->font = font; updateFontStyle();}
         void setBgColor( ili9488_rgb_t bgColor ){ this->bgColor = bgColor; updateFontStyle();}
         void setTextColor( ili9488_rgb_t textColor ){ this->textColor = textColor; updateFontStyle();}
@@ -40,12 +38,9 @@ class Text{
         void erase();
 
     private:
-        uint16_t x;
-        uint16_t y;
-        uint16_t width;
-        uint16_t oldWidth;
-        uint16_t height;
-        uint16_t oldHeight;
+        Point position;
+        Point size;
+        Point oldSize;
 
         bool autoErase;
 

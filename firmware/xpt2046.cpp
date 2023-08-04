@@ -90,8 +90,8 @@ XPT2046_TouchData_t XPT2046_getTouch()
     // convert raw resistance-Values to display coordinates
     x = map(xraw, min_x, max_x, 0, 480);
     y = map(yraw, min_y, max_y, 0, 320);
-    touchData.x = constrain(x, 0, 480);
-    touchData.y = constrain(y, 0, 320);
+    touchData.position.x = constrain(x, 0, 480);
+    touchData.position.y = constrain(y, 0, 320);
     touchData.pressure = zraw;
     return touchData;
 }

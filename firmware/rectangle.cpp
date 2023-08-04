@@ -11,11 +11,9 @@
 
 #include "rectangle.h"
 
-Rectangle::Rectangle( uint16_t x, uint16_t y, uint16_t width, uint16_t height, ili9488_rgb_t color ) {
-    this->x = x;
-    this->y = y;
-    this->width = width;
-    this->height = height;
+Rectangle::Rectangle( Point position, Point size, ili9488_rgb_t color ) {
+    this->position = position;
+    this->size = size;
 
     this->color = color;
 }
@@ -30,10 +28,10 @@ void Rectangle::draw() {
 
 void Rectangle::erase(ili9488_rgb_t backgroundColor) {
     ili9488_rect_attr_t rect_attr;
-    rect_attr.position.x = this->x;
-    rect_attr.position.y = this->y;
-    rect_attr.position.width = this->width;
-    rect_attr.position.height = this->height;
+    rect_attr.position.x = position.x;
+    rect_attr.position.y = position.y;
+    rect_attr.position.width = size.x;
+    rect_attr.position.height = size.y;
 
     rect_attr.fill.enable = true;
     rect_attr.fill.color = backgroundColor;
