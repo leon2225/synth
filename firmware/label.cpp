@@ -23,21 +23,19 @@ extern const uint DEBUG2_PIN;
 extern const uint DEBUG3_PIN;
 extern const uint DEBUG4_PIN;
 
-Label::Label( uint16_t x, uint16_t y, uint16_t width, uint16_t height, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment )
+Label::Label( Point position, Point size, std::string text, ili9488_rgb_t color, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment )
 {
-    this->x = x;
-    this->y = y;
-    this->width = width;
-    this->height = height;
+    this->position = position;
+    this->size = size;
 
-    this->bgColor = bgColor;
+    this->color = color;
     this->text = text;
     this->font = font;
     this->textColor = textColor;
     this->alignment = alignment;
     
-    this->textObj = new Text( x, y, text, bgColor, textColor, font);
-    this->bgObj = new Rectangle( x, y, width, height, bgColor);
+    this->textObj = new Text( position, text, color, textColor, font);
+    this->bgObj = new Rectangle( position, size, color);
 }
 
 Label::~Label()
@@ -56,8 +54,7 @@ void Label::setText( std::string text )
 
 void Label::updateSize()
 {
-    bgObj->setWidth( width );
-    bgObj->setHeight( height );
+    bgObj->setSize( size );
     updatePosition();
     updateBg = updateText = true;
 }
@@ -69,25 +66,24 @@ void Label::updateSize()
  */
 void Label::updatePosition(bool updateBg)
 {
+    Point offset;
     this->updateBg |= updateBg;
-    bgObj->setX( x );
-    bgObj->setY( y );
-    uint16_t textMargin = (height / 2) - (textObj->getHeight() / 2);
-    textObj->setY( textMargin + y);
+    bgObj->setPosition( position );
+    uint16_t textMargin = (size.y / 2) - (textObj->getSize().y / 2);
+    offset.y = textMargin;
 
-    uint16_t newX = 0;
     switch (alignment)
     {
     case LabelAlignment::LEFT:
-        newX = x + textMargin;
+        offset.x = textMargin;
         break;
     
     case LabelAlignment::CENTER:
-        newX = x + (width / 2) - (textObj->getWidth() / 2);
+        offset.x = (size.x / 2) - (textObj->getSize().x / 2);
         break;
 
     case LabelAlignment::RIGHT:
-        newX = x - textObj->getWidth() + width - textMargin;
+        offset.x = textObj->getSize().x + size.x - textMargin;
         break;
     
     default:
@@ -95,20 +91,21 @@ void Label::updatePosition(bool updateBg)
     }
 
     // Erase the old background if the text is moved to the right
-    if(newX > textObj->getX())
+    if((position + offset).x > textObj->getPosition().x)
     {
-        Rectangle rect = Rectangle( textObj->getX(), textObj->getY(), newX - textObj->getX(), textObj->getHeight(), bgColor);
+        Point eraseSize = Point( (position + offset).x - textObj->getPosition().x, textObj->getSize().y);
+        Rectangle rect = Rectangle( textObj->getPosition(), eraseSize, color);
         rect.draw();
     }
-    textObj->setX( newX );
+    textObj->setPosition( position + offset );
 }
 
 void Label::updateFontStyle()
 {
-    updateBg = !(bgObj->getColor() == bgColor);
+    updateBg = !(bgObj->getColor() == color);
     textObj->setFont( font );
-    textObj->setBgColor( bgColor );
-    bgObj->setColor( bgColor );
+    textObj->setBgColor( color );
+    bgObj->setColor( color );
     textObj->setTextColor( textColor );
     updatePosition(false);
 }
@@ -126,9 +123,10 @@ void Label::draw()
     }
 }
 
-void Label::erase()
+void Label::erase(ili9488_rgb_t color)
 {
-    bgObj->erase(bgColor);
+    bgObj->erase(color);
+    textObj->setBgColor( color );
     textObj->erase();
 }
 

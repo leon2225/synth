@@ -12,32 +12,29 @@
 
 #include "stdint.h"
 #include "ili9488.h"
+#include "point.h"
 
 class Rectangle {
     public:
-        Rectangle( uint16_t x, uint16_t y, uint16_t width, uint16_t height, ili9488_rgb_t color );
+        Rectangle();
+        Rectangle( Point position, Point size, ili9488_rgb_t color );
         ~Rectangle();
 
-        uint16_t getX(){ return this->x;}
-        uint16_t getY(){ return this->y;}
-        uint16_t getWidth(){ return this->width;}
-        uint16_t getHeight(){ return this->height;}
+        Point getPosition(){ return this->position;}
+        Point getSize(){ return this->size;}
         ili9488_rgb_t getColor(){ return this->color;}
+        bool contains( Point p );
 
-        void setX( uint16_t x ){ this->x = x;}
-        void setY( uint16_t y ){ this->y = y;}
-        void setWidth( uint16_t width ){ this->width = width;}
-        void setHeight( uint16_t height ){ this->height = height;}
+        void setPosition( Point position ){ this->position = position;}
+        void setSize( Point size ){ this->size = size;}
         void setColor( ili9488_rgb_t color ){ this->color = color;}
 
         void draw();
-        void erase(ili9488_rgb_t nackgroundColor);
+        void erase(ili9488_rgb_t bgColor);
 
     private:
-        uint16_t x;
-        uint16_t y;
-        uint16_t width;
-        uint16_t height;
+        Point position;
+        Point size;
 
         ili9488_rgb_t color;
 };

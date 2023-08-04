@@ -12,9 +12,8 @@
 #include "text.h"
 #include "ili9488_font.h"
 
-Text::Text( uint16_t x, uint16_t y, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, bool autoErase) {
-    this->x = x;
-    this->y = y;
+Text::Text( Point position, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, bool autoErase) {
+    this->position = position;
     this->bgColor = bgColor;
     this->textColor = textColor;
     this->font = font;
@@ -39,23 +38,22 @@ Text::~Text() {
 void Text::setText( std::string text) {
     this->text = text;
     if( this->autoErase ){
-        this->oldWidth = this->width;
-        this->oldHeight = this->height;
+        oldSize = size;
     }
-    this->width = calculateWidth();
-    this->height = calculateHeight();
+    size.x = calculateWidth();
+    size.y = calculateHeight();
 }
 
 void Text::draw() {
     if( this->autoErase )
     {
-        if( this->oldHeight > this->height )
+        if( oldSize.y > size.y )
         {
             ili9488_rect_attr_t rect_attr;
-            rect_attr.position.x = this->x;
-            rect_attr.position.y = this->y + this->height;
-            rect_attr.position.width = this->oldWidth;
-            rect_attr.position.height = this->oldHeight - this->height;
+            rect_attr.position.x = position.x;
+            rect_attr.position.y = (position + size).y;
+            rect_attr.position.width = oldSize.x;
+            rect_attr.position.height = (oldSize- size).y;
 
             rect_attr.fill.enable = true;
             rect_attr.fill.color = this->bgColor;
@@ -65,13 +63,13 @@ void Text::draw() {
 
             ili9488_draw_rectangle(&rect_attr);
         }
-        if( this->oldWidth > this->width )
+        if( oldSize.x > size.x )
         {
             ili9488_rect_attr_t rect_attr;
-            rect_attr.position.x = this->x + this->width;
-            rect_attr.position.y = this->y;
-            rect_attr.position.width = this->oldWidth - this->width;
-            rect_attr.position.height = this->height;
+            rect_attr.position.x = (position + size).x;
+            rect_attr.position.y = position.y;
+            rect_attr.position.width = (oldSize- size).x;
+            rect_attr.position.height = oldSize.y;
 
             rect_attr.fill.enable = true;
             rect_attr.fill.color = this->bgColor;
@@ -83,15 +81,15 @@ void Text::draw() {
         }
     }
 
-    ili9488_set_string(this->text.c_str(), this->x, this->y);
+    ili9488_set_string(this->text.c_str(), position.x, position.y);
 }
 
 void Text::erase() {
     ili9488_rect_attr_t rect_attr;
-    rect_attr.position.x = this->x;
-    rect_attr.position.y = this->y;
-    rect_attr.position.width = this->width;
-    rect_attr.position.height = this->height;
+    rect_attr.position.x = position.x;
+    rect_attr.position.y = position.y;
+    rect_attr.position.width = size.x;
+    rect_attr.position.height = size.y;
 
     rect_attr.fill.enable = true;
     rect_attr.fill.color = this->bgColor;
@@ -114,14 +112,13 @@ uint16_t Text::calculateHeight() {
 void Text::updateFontStyle() {
     this->font = font;
     if( this->autoErase ){
-        this->oldWidth = this->width;
-        this->oldHeight = this->height;
+        oldSize = size;
     }
-    this->width = calculateWidth();
-    this->height = calculateHeight();
+    size.x = calculateWidth();
+    size.y = calculateHeight();
     ili9488_set_string_pen(this->textColor, this->bgColor, this->font);
 }
 
 void Text::updatePosition() {
-    ili9488_set_cursor(this->x, this->y);
+    ili9488_set_cursor(position.x, position.y);
 }

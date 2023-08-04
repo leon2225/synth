@@ -18,6 +18,8 @@
 #include "rectangle.h"
 #include "text.h"
 
+#include "point.h"
+
 enum class LabelAlignment{
     LEFT,
     CENTER,
@@ -26,37 +28,32 @@ enum class LabelAlignment{
 
 class Label {
     public:
-        Label( uint16_t x, uint16_t y, uint16_t width, uint16_t height, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment = LabelAlignment::LEFT);
+        Label( Point position, Point size, std::string text, ili9488_rgb_t color, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment = LabelAlignment::LEFT);
         ~Label();
 
-        uint16_t getX(){ return this->x;}
-        uint16_t getY(){ return this->y;}
-        uint16_t getWidth(){ return this->width;}
-        uint16_t getHeight(){ return this->height;}
+        Point getPosition(){ return position;}
+        Point getSize(){ return size;}
         uint16_t getFont(){ return this->font;}
         ili9488_rgb_t getTextColor(){ return this->textColor;}
-        ili9488_rgb_t getBgColor(){ return this->bgColor;}
+        ili9488_rgb_t getBgColor(){ return this->color;}
         std::string getText(){ return this->text;}
+        bool contains( Point p ){ return bgObj->contains(p);}
 
-        void setX( uint16_t x ){ this->x = x; updatePosition();}
-        void setY( uint16_t y ){ this->y = y; updatePosition();}
-        void setWidth( uint16_t width ){ this->width = width; updateSize();}
-        void setHeight( uint16_t height ){ this->height = height; updateSize();}
+        void setPosition( Point position ){ this->position = position; updatePosition();}
+        void setSize( Point size ){ this->size = size; updateSize();}
         void setFont( ili9488_font_opt_t font ){ this->font = font; updateFontStyle();}
-        void setBgColor( ili9488_rgb_t bgColor ){ this->bgColor = bgColor; updateFontStyle(); updateBg = true;}
+        void setBgColor( ili9488_rgb_t color ){ this->color = color; updateFontStyle(); updateBg = true;}
         void setTextColor( ili9488_rgb_t textColor ){ this->textColor = textColor; updateFontStyle();}
         void setText( std::string text );
 
         void draw();
-        void erase();
+        void erase(ili9488_rgb_t color);
 
-    private:
-        uint16_t x;
-        uint16_t y;
-        uint16_t width;
-        uint16_t height;
+    protected:
+        Point position;
+        Point size;
 
-        ili9488_rgb_t bgColor;
+        ili9488_rgb_t color;
         ili9488_rgb_t textColor;
         ili9488_font_opt_t font;
         LabelAlignment alignment;
