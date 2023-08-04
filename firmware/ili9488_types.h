@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Typedefs
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,12 +24,24 @@ typedef enum
 } ili9488_status_t;
 
 // Standard rbg
-typedef struct
+struct RGB_Color
 {
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
-} ili9488_rgb_t;
+#ifdef __cplusplus
+	bool operator==(const RGB_Color& other) const
+	{
+		return (r == other.r && g == other.g && b == other.b);
+	}
+	bool operator!=(const RGB_Color& other) const
+	{
+		return !(*this == other);
+	}
+#endif
+};
+typedef struct RGB_Color ili9488_rgb_t;
+
 
 // Font options
 typedef enum
@@ -102,3 +118,7 @@ typedef struct
 	} border;
 
 } ili9488_circ_attr_t;
+
+#ifdef __cplusplus
+}
+#endif
