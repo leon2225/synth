@@ -105,8 +105,10 @@ void Label::updatePosition(bool updateBg)
 
 void Label::updateFontStyle()
 {
+    updateBg = !(bgObj->getColor() == bgColor);
     textObj->setFont( font );
     textObj->setBgColor( bgColor );
+    bgObj->setColor( bgColor );
     textObj->setTextColor( textColor );
     updatePosition(false);
 }
@@ -116,6 +118,7 @@ void Label::draw()
     if(updateBg){
         updateBg = false;
         bgObj->draw();
+        updateText = true; // Text has to be updated if the background is updated
     }
     if(updateText){
         updateText = false;

@@ -43,7 +43,7 @@ class Label {
         void setWidth( uint16_t width ){ this->width = width; updateSize();}
         void setHeight( uint16_t height ){ this->height = height; updateSize();}
         void setFont( ili9488_font_opt_t font ){ this->font = font; updateFontStyle();}
-        void setBgColor( ili9488_rgb_t bgColor ){ this->bgColor = bgColor; updateFontStyle();}
+        void setBgColor( ili9488_rgb_t bgColor ){ this->bgColor = bgColor; updateFontStyle(); updateBg = true;}
         void setTextColor( ili9488_rgb_t textColor ){ this->textColor = textColor; updateFontStyle();}
         void setText( std::string text );
 
