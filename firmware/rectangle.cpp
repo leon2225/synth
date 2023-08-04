@@ -22,6 +22,12 @@ Rectangle::~Rectangle() {
 
 }
 
+bool Rectangle::contains( Point p ) {
+
+    return  (position.x <= p.x) && (p.x <= (position+size).x) && 
+            (position.y <= p.y) && (p.y <= (position+size).y);
+}
+
 void Rectangle::draw() {
     erase(this->color);
 }

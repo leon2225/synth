@@ -37,6 +37,7 @@ class Label {
         ili9488_rgb_t getTextColor(){ return this->textColor;}
         ili9488_rgb_t getBgColor(){ return this->color;}
         std::string getText(){ return this->text;}
+        bool contains( Point p ){ return bgObj->contains(p);}
 
         void setPosition( Point position ){ this->position = position; updatePosition();}
         void setSize( Point size ){ this->size = size; updateSize();}
