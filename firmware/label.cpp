@@ -36,6 +36,8 @@ Label::Label( Point position, Point size, std::string text, ili9488_rgb_t color,
     
     this->textObj = new Text( position, text, color, textColor, font);
     this->bgObj = new Rectangle( position, size, color);
+    updateSize();
+    updateFontStyle();
 }
 
 Label::~Label()
@@ -107,7 +109,7 @@ void Label::updateFontStyle()
     textObj->setBgColor( color );
     bgObj->setColor( color );
     textObj->setTextColor( textColor );
-    updatePosition(false);
+    updateSize();
 }
 
 void Label::draw()
