@@ -210,8 +210,8 @@ void ili9488_if_set_reset(const bool state)
 void ili9488_if_set_led(const float brigthness)
 {
 	// USER CODE BEGIN...
-
-	pwm_set_chan_level( pwm_slice_num, pwm_chan, brigthness * 255.0f );
+	float duty = 255.0f * brigthness;
+	pwm_set_chan_level( pwm_slice_num, pwm_chan, duty );
 
 	// USER CODE END...
 }
