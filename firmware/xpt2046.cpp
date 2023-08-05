@@ -106,6 +106,12 @@ XPT2046_TouchData_t XPT2046_getTouch()
 ////////////////////////////////////////////////////////////////////////////////
 void XPT2046_update()
 {
+    if(gpio_get(XPT2046_IRQ) == 1)
+    {
+        zraw = 0;
+        return;
+    }
+
 	int16_t data[6];
 	int z;
     uint32_t displayBaudrate = spi_get_baudrate(XPT2046_SPI);

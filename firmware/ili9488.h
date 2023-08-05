@@ -51,8 +51,12 @@ extern "C" {
 #define ILI9488_COLOR_PURPLE		( {ili9488_rgb_t c = {0xFF, 0x00, 0xFF}; c;} )
 #define ILI9488_COLOR_YELLOW		( {ili9488_rgb_t c = {0xFF, 0xFF, 0x00}; c;} )
 #define ILI9488_COLOR_WHITE			( {ili9488_rgb_t c = {0xFF, 0xFF, 0xFF}; c;} )
-#define ILI9488_COLOR_LIGHT_GRAY	( {ili9488_rgb_t c = {0x0F, 0x7F, 0x0F}; c;} )
-#define ILI9488_COLOR_GRAY			( {ili9488_rgb_t c = {0x17, 0x7F, 0x17}; c;} )
+#define ILI9488_COLOR_LIGHT_GRAY	( {ili9488_rgb_t c = ili9488_hex_to_rgb(0x8e8181); c;} )
+#define ILI9488_COLOR_GRAY			( {ili9488_rgb_t c = ili9488_hex_to_rgb(0x4d4747); c;} )
+#define ILI9488_COLOR_DARK_GRAY		( {ili9488_rgb_t c = ili9488_hex_to_rgb(0x232020); c;} )
+
+#define DISPLAY_WIDTH		( 480 )
+#define DISPLAY_HEIGHT		( 320 )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function Prototypes
