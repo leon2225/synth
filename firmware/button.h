@@ -18,18 +18,19 @@
 
 class Button: public Label{
     public:
-        Button( Point position, Point Size, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment = LabelAlignment::LEFT);
+        Button( Point position, Point Size, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t activeBgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment = LabelAlignment::LEFT);
         ~Button();
 
         void setOnPress( void (*onPress)(Button* button) ){ this->onPress = onPress;}
         void setOnRelease( void (*onRelease)(Button* button) ){ this->onRelease = onRelease;}
 
-        void handlePress();
-        void handleRelease();
-
-        bool contains( Point p );
+        void handleOnPress();
+        void handleOnRelease();
 
     protected:
         void (*onPress)(Button* button);
         void (*onRelease)(Button* button);
+
+        ili9488_rgb_t activeBgColor;
+        ili9488_rgb_t inactiveBgColor;
 };
