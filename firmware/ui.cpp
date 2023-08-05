@@ -50,9 +50,14 @@ const uint32_t TOUCH_PERIOD = 1000000 / UPDATE_RATE_TOUCH;
 ////////////////////////////////////////
 // Prototypes
 ////////////////////////////////////////
-void initHardware();
+void ui_initHardware();
 void ui_updateDisplay();
 void ui_updateTouch();
+void ui_handleOnPress(Point pos);
+void ui_handleOnRelease(Point start, Point end);
+void ui_buildUI();
+void handleButtonPress(Button* button);
+void handleButtonRelease(Button* button);
 
 ////////////////////////////////////////
 // Variables
@@ -72,10 +77,13 @@ std::vector<Button*> g_buttons;
  * 
  */
 void ui_setup() {
-    initHardware();
+    ui_initHardware();
 
     // set background to bg
     ili9488_set_background( ILI9488_COLOR_WHITE );
+
+    // create Layout
+    ui_buildUI();
 }
 
 /**
@@ -149,18 +157,20 @@ void ui_updateDisplay() {
  */
 void ui_updateTouch() {
     static bool pressed = false;
+    static Point firstPos = {0,0};
     XPT2046_update();
     XPT2046_TouchData_t touch = XPT2046_getTouch();
     if(touch.pressure) {
         if(!pressed) {
             pressed = true;
-            gpio_xor_mask(1 << DEBUG2_PIN);
+            ui_handleOnPress(touch.position);
+            firstPos = touch.position;
         }
     }
     else {
         if(pressed) {
             pressed = false;
-            gpio_xor_mask(1 << DEBUG2_PIN);
+            ui_handleOnRelease(firstPos, touch.position);
         }
     }
 }
@@ -169,20 +179,61 @@ void ui_updateTouch() {
  * @brief Initialize display hardware and touch controller
  * 
  */
-void initHardware() {
+void ui_initHardware() {
     // init hardware
     ili9488_init();
     XPT2046_Init();
 }
 
 /**
- * @brief Handler for touch events
+ * @brief Handler for press events
  * 
+ * @param pos   Position of the pointer on press
  */
-void touchHandler(uint16_t x, uint16_t y) {
-    XPT2046_update();
-    XPT2046_TouchData_t touch = XPT2046_getTouch();
-    if(touch.pressure) {
-        gpio_xor_mask(1 << DEBUG2_PIN);
+void ui_handleOnPress(Point pos) {
+    gpio_xor_mask(1 << DEBUG2_PIN);
+    for(Button* btn : g_buttons) {
+        if(btn->contains(pos)) {
+            btn->handleOnPress();
+        }
     }
+}
+
+/**
+ * @brief Handler for release events
+ * 
+ * @param pos   Last position of the pointer
+ */
+void ui_handleOnRelease(Point startPos, Point endPos) {
+    gpio_xor_mask(1 << DEBUG2_PIN);
+    for(Button* btn : g_buttons) {
+        if(btn->contains(startPos) && btn->contains(endPos)) {
+            btn->handleOnRelease();
+        }
+    }
+}
+
+
+/**
+ * @brief Handler for button presses
+ * 
+ * @param button 
+ */
+void handleButtonPress(Button* button){
+    gpio_xor_mask(1 << DEBUG1_PIN);
+    button->draw();
+
+    printf("Button %s pressed\n", button->getText().c_str());
+}
+
+/**
+ * @brief Handler for button releases
+ * 
+ * @param button 
+ */
+void handleButtonRelease(Button* button){
+    gpio_xor_mask(1 << DEBUG1_PIN);
+    button->draw();
+
+    printf("Button %s released\n", button->getText().c_str());
 }
