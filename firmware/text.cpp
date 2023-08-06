@@ -80,7 +80,8 @@ void Text::draw() {
             ili9488_draw_rectangle(&rect_attr);
         }
     }
-
+    ili9488_set_string_pen(this->textColor, this->bgColor, this->font);
+    ili9488_set_cursor(position.x, position.y);
     ili9488_set_string(this->text.c_str(), position.x, position.y);
 }
 
@@ -116,9 +117,8 @@ void Text::updateFontStyle() {
     }
     size.x = calculateWidth();
     size.y = calculateHeight();
-    ili9488_set_string_pen(this->textColor, this->bgColor, this->font);
 }
 
 void Text::updatePosition() {
-    ili9488_set_cursor(position.x, position.y);
+    ;
 }
