@@ -27,7 +27,6 @@ Button::~Button() {
  * 
  */
 void Button::handleOnPress() {
-    setBgColor( activeBgColor );
     if( this->onPress != nullptr ){
         this->onPress(this);
     }
@@ -38,7 +37,6 @@ void Button::handleOnPress() {
  * 
  */ 
 void Button::handleOnRelease() {
-    setBgColor( inactiveBgColor );
     if( this->onRelease != nullptr ){
         this->onRelease(this);
     }  

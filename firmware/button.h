@@ -18,11 +18,17 @@
 
 class Button: public Label{
     public:
+        Button(){};
         Button( Point position, Point Size, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t activeBgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment = LabelAlignment::LEFT);
         ~Button();
 
         void setOnPress( void (*onPress)(Button* button) ){ this->onPress = onPress;}
         void setOnRelease( void (*onRelease)(Button* button) ){ this->onRelease = onRelease;}
+        
+        void activate(){ setBgColor( activeBgColor );}
+        void deactivate(){ setBgColor( inactiveBgColor );}
+
+        bool isActive(){ return getBgColor() == activeBgColor;}
 
         void handleOnPress();
         void handleOnRelease();
