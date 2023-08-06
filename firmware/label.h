@@ -28,16 +28,18 @@ enum class LabelAlignment{
 
 class Label {
     public:
+        Label(){};
         Label( Point position, Point size, std::string text, ili9488_rgb_t color, ili9488_rgb_t textColor, ili9488_font_opt_t font, LabelAlignment alignment = LabelAlignment::LEFT);
         ~Label();
+        Label( const Label& other ); // copy constructor
 
-        Point getPosition(){ return position;}
-        Point getSize(){ return size;}
-        uint16_t getFont(){ return this->font;}
-        ili9488_rgb_t getTextColor(){ return this->textColor;}
-        ili9488_rgb_t getBgColor(){ return this->color;}
-        std::string getText(){ return this->text;}
-        bool contains( Point p ){ return bgObj->contains(p);}
+        Point getPosition() const { return position;}
+        Point getSize() const { return size;}
+        uint16_t getFont() const { return this->font;}
+        ili9488_rgb_t getTextColor() const { return this->textColor;}
+        ili9488_rgb_t getBgColor() const { return this->color;}
+        std::string getText() const { return this->text;}
+        bool contains( Point p ) const { return bgObj->contains(p);}
 
         void setPosition( Point position ){ this->position = position; updatePosition();}
         void setSize( Point size ){ this->size = size; updateSize();}

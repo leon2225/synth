@@ -20,10 +20,10 @@ class Rectangle {
         Rectangle( Point position, Point size, ili9488_rgb_t color );
         ~Rectangle();
 
-        Point getPosition(){ return this->position;}
-        Point getSize(){ return this->size;}
-        ili9488_rgb_t getColor(){ return this->color;}
-        bool contains( Point p );
+        Point getPosition() const { return this->position;}
+        Point getSize() const { return this->size;}
+        ili9488_rgb_t getColor() const { return this->color;}
+        bool contains( Point p ) const ;
 
         void setPosition( Point position ){ this->position = position;}
         void setSize( Point size ){ this->size = size;}

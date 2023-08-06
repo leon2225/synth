@@ -21,12 +21,12 @@ class Text{
         Text( Point position, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, bool autoErase = true);
         ~Text();
 
-        Point getPosition(){ return this->position;}
-        Point getSize(){ return this->size;}
-        uint16_t getFont(){ return this->font;}
-        ili9488_rgb_t getTextColor(){ return this->textColor;}
-        ili9488_rgb_t getBgColor(){ return this->bgColor;}
-        std::string getText(){ return this->text;}
+        Point getPosition() const { return this->position;}
+        Point getSize() const { return this->size;}
+        uint16_t getFont() const { return this->font;}
+        ili9488_rgb_t getTextColor() const { return this->textColor;}
+        ili9488_rgb_t getBgColor() const { return this->bgColor;}
+        std::string getText() const { return this->text;}
 
         void setPosition( Point position ){ this->position = position; updatePosition();}
         void setFont( ili9488_font_opt_t font ){ this->font = font; updateFontStyle();}

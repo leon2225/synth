@@ -20,6 +20,9 @@ class Point
         Point( uint16_t x, uint16_t y ){ this->x = x; this->y = y;}
         ~Point(){};
 
+        Point xPart() const { return Point(this->x, 0);}
+        Point yPart() const { return Point(0, this->y);}
+
         uint16_t x;
         uint16_t y;
 
