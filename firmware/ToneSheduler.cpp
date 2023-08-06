@@ -93,8 +93,8 @@ bool ToneSheduler::startTone(Tone tone)
             if (channelIndex > highestActiveChannel)
             {
                 highestActiveChannel = channelIndex;
-                sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
-                uart_puts(uart0, strBuffer);
+                //sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
+                //uart_puts(uart0, strBuffer);
             }
 
 
@@ -117,14 +117,14 @@ void ToneSheduler::handleDoneTone(uint8_t channel)
             if (!currentTones[i].isDone())
             {
                 highestActiveChannel = i;
-                sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
-                uart_puts(uart0, strBuffer);
+                //sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
+                //uart_puts(uart0, strBuffer);
                 return;
             }
         }
         highestActiveChannel = -1;
-        sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
-        uart_puts(uart0, strBuffer);
+        //sprintf(strBuffer, ">N: %d\n", highestActiveChannel);
+        //uart_puts(uart0, strBuffer);
     }
 }
 
