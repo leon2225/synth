@@ -46,6 +46,23 @@ Label::~Label()
     delete bgObj;
 }
 
+Label::Label( const Label& other )
+{
+    this->position = other.position;
+    this->size = other.size;
+
+    this->color = other.color;
+    this->text = other.text;
+    this->font = other.font;
+    this->textColor = other.textColor;
+    this->alignment = other.alignment;
+    
+    this->textObj = new Text( position, text, color, textColor, font);
+    this->bgObj = new Rectangle( position, size, color);
+    updateSize();
+    updateFontStyle();
+}
+
 void Label::setText( std::string text )
 {
     this->text = text;
