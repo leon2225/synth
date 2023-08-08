@@ -10,7 +10,7 @@
  */
 
 #include "text.h"
-#include "ili9488_font.h"
+#include "../ili9488/ili9488_font.h"
 
 Text::Text( Point position, std::string text, ili9488_rgb_t bgColor, ili9488_rgb_t textColor, ili9488_font_opt_t font, bool autoErase) {
     this->position = position;

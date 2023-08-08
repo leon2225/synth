@@ -12,7 +12,7 @@
 #pragma once
 
 #include "stdint.h"
-#include "ili9488.h"
+#include "../ili9488/ili9488.h"
 #include <string>
 
 #include "rectangle.h"

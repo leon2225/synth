@@ -17,7 +17,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "point.h"
+#include "../ui/point.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Data types

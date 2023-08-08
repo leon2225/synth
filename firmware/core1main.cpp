@@ -4,7 +4,7 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-#include "ui.h"
+#include "ui/ui.h"
 
 #define FLAG_VALUE 123
  

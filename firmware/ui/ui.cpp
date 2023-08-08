@@ -19,14 +19,18 @@
 #include "math.h"
 #include <string>
 #include <vector>
+#include <span>
 
-#include "ili9488.h"
-#include "xpt2046.h"
+#include "../ili9488/ili9488.h"
+#include "../xpt2046/xpt2046.h"
 
 #include "rectangle.h"
 #include "text.h"
 #include "label.h"
 #include "button.h"
+#include "../ui_songs/ui_song.h"
+
+#include "../ui_songs/songs/ui_song_interface.h"
 
 ////////////////////////////////////////
 // Defines
@@ -76,8 +80,11 @@ Button *g_quieterBtn;
 
 Rectangle* g_volumeSlider;
 Rectangle *g_volumeGrayBar;
+std::span<Rectangle*> g_volumeBars;
 
 uint8_t g_volume = 50;
+
+uint32_t cppVersion = __cplusplus;
 
 ////////////////////////////////////////
 // Functions
@@ -93,6 +100,15 @@ void ui_setup() {
     // set background to bg
     ili9488_set_background( ILI9488_COLOR_WHITE );
 
+    ui_song *song = getCompiledSong();
+    std::vector<std::string> *channels;
+    song->getChannels(channels);
+    printf("Channels: %d\n", channels->size());
+    for(std::string channel : *channels) {
+        printf("Channel: %s\n", channel.c_str());
+    }
+    std::string channelName = channels->at(0);
+    printf("Channels: %s is the %s name\n", channels->at(2).c_str(), "test test");
     // create Layout
     ui_buildUI();
 }
@@ -208,7 +224,7 @@ void ui_buildMenu()
     uint16_t leftBorder = 2;
     Point startPos = Point(DISPLAY_WIDTH - width, 0);
     ili9488_rgb_t textColor = ILI9488_COLOR_WHITE;
-    ili9488_rgb_t bgColor = ili9488_hex_to_rgb(0xCA5858);
+    ili9488_rgb_t bgColor = ili9488_hex_to_rgb(0xDB4747); //Value changed to match actual color
     ili9488_rgb_t activeColor = ili9488_hex_to_rgb(0xE08F8F);
     ili9488_rgb_t borderColor = ili9488_hex_to_rgb(0x5B5B5B);
     std::string text[] = {"< Back", "Pause", "Play", "Stop"};
@@ -287,7 +303,7 @@ void ui_buildVolumeCtrl( const Point size, const Point pos, const uint16_t btnLe
     ili9488_font_opt_t font = eILI9488_FONT_16;
     ili9488_rgb_t bgColor = ili9488_hex_to_rgb(0xD9D9D9);
     ili9488_rgb_t sliderBgColor = ili9488_hex_to_rgb(0x999999);
-    ili9488_rgb_t sliderColor = ili9488_hex_to_rgb(0x83C52F);
+    ili9488_rgb_t sliderColor = ili9488_hex_to_rgb(0x80C725);
 
     Point buttonSize = btnTemplate->getSize();
     std::vector<Point> borderPos = {pos+buttonSize.yPart(), pos + Point(0, size.y - buttonSize.y - border)};

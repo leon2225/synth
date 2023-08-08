@@ -23,7 +23,7 @@
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
 #include "hardware/dma.h"
-#include "ili9488_if.h"
+#include "../ili9488/ili9488_if.h"
 
 // USER INCLUDES END...
 
