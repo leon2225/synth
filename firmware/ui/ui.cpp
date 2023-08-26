@@ -100,6 +100,8 @@ Rectangle *g_volumeGrayBar;
 std::span<Rectangle*> g_volumeBars;
 
 uint8_t g_volume = 50;
+bool g_isPlaying = false;
+
 ui_song g_song; 
 std::span<ui_tone> g_visibleTones;
 
@@ -140,9 +142,12 @@ void ui_loop() {
         g_nextTime_display = now + DISPLAY_PERIOD;
     }
     if( g_nextTime_tones <= now ) {
+        if(g_isPlaying)
+        {
             ui_updateTime(TONES_PERIOD);
             ui_updateVisibleTones();
             ui_drawTones(g_visibleTones);
+        }
         
         g_nextTime_tones = now + TONES_PERIOD;
     }
@@ -329,16 +334,22 @@ void ui_buildMenu()
     // set touch callbacks
 
     g_pauseBtn->setOnPress([](Button* btn){
+        g_isPlaying = false;
         btn->activate();
         g_playBtn->deactivate();
     });
 
     g_playBtn->setOnPress([](Button* btn){
+        g_isPlaying = true;
         g_pauseBtn->deactivate();
         btn->activate();
     });
 
     g_stopBtn->setOnPress([](Button* btn){
+        g_isPlaying = false;
+        g_song.setProgress(0);
+        ui_drawTones(std::span<ui_tone>{});
+
         g_pauseBtn->deactivate();
         g_playBtn->deactivate();
     });
