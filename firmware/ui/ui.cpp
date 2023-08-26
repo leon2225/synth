@@ -19,6 +19,7 @@
 #include "math.h"
 #include <string>
 #include <vector>
+#include <map>
 #include <span>
 
 #include "../ili9488/ili9488.h"
@@ -44,8 +45,12 @@ extern const uint DEBUG4_PIN;
 #define UPDATE_RATE_TOUCH   (30)
 
 //periods for display and touch taks in us
-const uint32_t DISPLAY_PERIOD = 1000000 / UPDATE_RATE_DISPLAY;
-const uint32_t TOUCH_PERIOD = 1000000 / UPDATE_RATE_TOUCH;
+const uint32_t DISPLAY_PERIOD = 1'000'000 / UPDATE_RATE_DISPLAY;
+const uint32_t TOUCH_PERIOD = 1'000'000 / UPDATE_RATE_TOUCH;
+const uint32_t TONES_PERIOD = 50'000;
+const uint32_t TIME_UPDATE_PERIOD = 1'000'000;
+
+const uint32_t TIME_HORIZON = 10'000'000; // 10 seconds
  
 ////////////////////////////////////////
 // Typedefs
@@ -55,7 +60,7 @@ const uint32_t TOUCH_PERIOD = 1000000 / UPDATE_RATE_TOUCH;
 // Prototypes
 ////////////////////////////////////////
 void ui_initHardware();
-void ui_updateDisplay();
+void ui_updateUI();
 void ui_updateTouch();
 void ui_handleOnPress(Point pos);
 void ui_handleOnRelease(Point start, Point end);
@@ -63,12 +68,22 @@ void ui_buildUI();
 void ui_buildMenu();
 void ui_buildVolumeCtrl( const Point size, const Point pos, const uint16_t btnLeftBorder, const Button* btnTemplate, const ili9488_rgb_t borderColor);
 void ui_updateVolumeSlider();
+void ui_drawTones(std::span<ui_tone> tones);
+void ui_drawSongMetadata(ui_song &song);
+
+void ui_updateSong(std::string name );
+void ui_updateTime(uint32_t deltaTime);
+void ui_updateVisibleTones();
+
+void ui_timeToString(uint32_t time, std::string* str);
 
 ////////////////////////////////////////
 // Variables
 ////////////////////////////////////////
 uint32_t g_nextTime_display = 0;
 uint32_t g_nextTime_touch = 0;
+uint32_t g_nextTime_tones = 0;
+uint32_t g_nextTime_timeUpdate = 0;
 
 std::vector<Button*> g_buttons;
 Button *g_menuBtn;
@@ -77,12 +92,16 @@ Button *g_pauseBtn;
 Button *g_stopBtn;
 Button *g_louderBtn;
 Button *g_quieterBtn;
+Text *g_currentTimeText;
+std::map<uint32_t, Rectangle*> g_tones;
 
 Rectangle* g_volumeSlider;
 Rectangle *g_volumeGrayBar;
 std::span<Rectangle*> g_volumeBars;
 
 uint8_t g_volume = 50;
+ui_song g_song; 
+std::span<ui_tone> g_visibleTones;
 
 uint32_t cppVersion = __cplusplus;
 
@@ -100,17 +119,10 @@ void ui_setup() {
     // set background to bg
     ili9488_set_background( ILI9488_COLOR_WHITE );
 
-    ui_song *song = getCompiledSong();
-    std::vector<std::string> *channels;
-    song->getChannels(channels);
-    printf("Channels: %d\n", channels->size());
-    for(std::string channel : *channels) {
-        printf("Channel: %s\n", channel.c_str());
-    }
-    std::string channelName = channels->at(0);
-    printf("Channels: %s is the %s name\n", channels->at(2).c_str(), "test test");
     // create Layout
     ui_buildUI();
+
+    ui_updateSong("test");
 }
 
 /**
@@ -124,20 +136,68 @@ void ui_loop() {
         g_nextTime_touch = now + TOUCH_PERIOD;
     }
     if( g_nextTime_display <= now ) {
-        ui_updateDisplay();
+        ui_updateUI();
         g_nextTime_display = now + DISPLAY_PERIOD;
     }
+    if( g_nextTime_tones <= now ) {
+            ui_updateTime(TONES_PERIOD);
+            ui_updateVisibleTones();
+            ui_drawTones(g_visibleTones);
+        
+        g_nextTime_tones = now + TONES_PERIOD;
+    }
+    if( g_nextTime_timeUpdate <= now ) {
+        std::string timeStr;
+        ui_timeToString(g_song.getProgress(), &timeStr);
+        g_currentTimeText->setText(timeStr);
+        g_currentTimeText->draw();
+        g_nextTime_timeUpdate = now + TIME_UPDATE_PERIOD;
+    }
+}
+
+/**
+ * @brief Updates the internal time of the song that is used for displaying
+ * 
+ * @param time 
+ */
+void ui_updateTime(uint32_t deltaTime)
+{
+    g_song.updateProgress(deltaTime);
+}
+
+/**
+ * @brief Updates the tones that should be displayed
+ * 
+ * @param tones     Tones that should be displayed
+ */
+void ui_updateVisibleTones()
+{
+    g_song.getActiveTones(TIME_HORIZON, g_visibleTones);
 }
 
 /**
  * @brief Cyclic handler for display
  * 
  */
-void ui_updateDisplay() {
+void ui_updateUI() {
     // draw buttons
     for(Button* btn : g_buttons) {
         btn->draw();
     }
+}
+
+/**
+ * @brief Updates the the displayed information of the song
+ * 
+ * @param name      Name of the song
+ */
+void ui_updateSong(std::string name ){
+    g_song.loadMetaData();
+    std::span<ui_tone> tones;
+    g_song.getTones(0,TIME_HORIZON,tones);
+
+    // draw tones
+    ui_drawSongMetadata(g_song);
 }
 
 /**
@@ -384,4 +444,135 @@ void ui_updateVolumeSlider()
     // draw new size
     g_volumeGrayBar->setSize(newSize);
     g_volumeGrayBar->draw();
+}
+
+void ui_drawTones(std::span<ui_tone> tones)
+{
+    Point startPos = Point(0, 20);
+    Point size = Point(380, 280);
+
+    const uint32_t timeFrameShown = 10'000'000; // 10 seconds
+
+    ili9488_rgb_t noteColor = ili9488_hex_to_rgb(0xF08B14);
+
+    ili9488_rgb_t channel1Color = ili9488_hex_to_rgb(0xF08B14);
+    ili9488_rgb_t channel2Color = ili9488_hex_to_rgb(0x3141CF);
+    uint32_t mapLength = g_tones.size();
+    auto channelColors = std::vector<ili9488_rgb_t>{channel1Color, channel2Color};
+
+    // delete old notes
+    
+    for (auto it = g_tones.cbegin(); it != g_tones.cend() /* not hoisted */; /* no increment */)
+    {
+        if(!tones.size() || it->first < tones[0].startTime)
+        {
+            it->second->erase(ILI9488_COLOR_WHITE);
+            delete it->second;
+            g_tones.erase(it++);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    // draw notes
+    for(auto tone: tones)
+    {
+        int32_t relStartTime = (int32_t)tone.startTime - (int32_t)g_song.getProgress();
+        volatile uint32_t noteDuration = tone.duration;
+
+        // handle notes that start before frame
+        if(relStartTime < 0){
+            noteDuration = tone.duration + relStartTime;
+
+            // skip notes that end before frame
+            if (((int32_t)tone.duration + relStartTime) < 0) continue;   
+        }
+
+        Point noteSize(size.x * noteDuration / timeFrameShown, 4);
+        Point offset(size.x * MAX(relStartTime, 0) / timeFrameShown, size.y * tone.frequency / 128 - noteSize.y / 2);
+
+        noteSize.x = MIN(noteSize.x, size.x - offset.x);
+        noteSize.x = MAX(noteSize.x, 1);
+
+        Rectangle* rect;
+        if(!g_tones.contains(tone.startTime))
+        {
+            rect = new Rectangle(startPos + offset, noteSize, channelColors[(tone.channelIdx+1)%2]);
+        }
+        else
+        {
+            rect = g_tones[tone.startTime];
+
+            // clear difference between old and new note
+            auto StartPos = startPos + offset + noteSize.xPart();
+            auto Size = rect->getPosition().xPart() + rect->getSize() - noteSize.xPart() - offset.xPart();
+            Rectangle* eraseRect = new Rectangle(StartPos, Size, ILI9488_COLOR_WHITE);
+            eraseRect->draw();
+            delete eraseRect;
+            rect->setSize(noteSize);
+            rect->setPosition(startPos + offset);
+        }
+
+        rect->draw();
+        
+
+        g_tones[tone.startTime] = rect;
+    }
+    
+}
+
+void ui_drawSongMetadata(ui_song &song)
+{
+    Point namePos = Point(8, 4);
+    Point timePos = Point(8, 300);
+    Point channelsPos = Point(200, 300);
+
+    ili9488_rgb_t textColor = ili9488_hex_to_rgb(0x000000);
+    ili9488_rgb_t channel1Color = ili9488_hex_to_rgb(0xF08B14);
+    ili9488_rgb_t channel2Color = ili9488_hex_to_rgb(0x3141CF);
+    ili9488_font_opt_t fontTitle = eILI9488_FONT_24;
+    ili9488_font_opt_t fontTime = eILI9488_FONT_16;
+    ili9488_font_opt_t fontChannels = eILI9488_FONT_16;
+
+    // draw song name
+    Text* text = new Text(namePos, song.getName(), ILI9488_COLOR_WHITE, textColor, fontTitle);
+    text->draw();
+    delete text;
+
+    // draw song time
+    std::string timeStr;
+    ui_timeToString(song.getDuration(), &timeStr);
+    g_currentTimeText = new Text(timePos, "0:00", ILI9488_COLOR_WHITE, textColor, fontTime);
+    g_currentTimeText->draw();
+    text = new Text(timePos + g_currentTimeText->getSize().xPart(), " / " + timeStr, ILI9488_COLOR_WHITE, textColor, fontTime);
+    text->draw();
+    delete text;
+
+    // draw channels
+    Point channelOffset = Point(0, 0);
+    std::vector<std::string> channels;
+    song.getChannels(channels);
+    std::string strings[] = {channels[3], "|", channels[4]};
+    ili9488_rgb_t colors[] = {channel1Color, textColor, channel2Color};
+    for(uint16_t i = 0; i < 3; i++) {
+        text = new Text(channelsPos + channelOffset, strings[i], ILI9488_COLOR_WHITE, colors[i], fontChannels);
+        text->draw();
+        delete text;
+        channelOffset += text->getSize().xPart();
+    }
+}
+
+/**
+ * @brief Converts a time in microseconds to a string
+ * 
+ * @param timeUs    Time in microseconds
+ * @param str       Pointer to the string where the result should be stored
+ */
+void ui_timeToString(uint32_t timeUs, std::string* str)
+{
+    uint32_t timeS = timeUs / 1000000;
+    char buffer[6]; sprintf(buffer, "%01d:%02d", timeS/60, timeS%60);
+    *str = std::string(buffer);
 }
